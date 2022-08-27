@@ -15,7 +15,7 @@ HEADERS = $(OBJECTS:.o=.h)
 all:  graph clean
 
 graph: $(TARGET1)
-	gcc $(LDOPTS) -o $(TARGET1) $(OBJECT1)
+	gcc $(LDOPTS) -o $(TARGET1) $(OBJECT1) -lm
 
 $(TARGET1): $(OBJECT1)
 
