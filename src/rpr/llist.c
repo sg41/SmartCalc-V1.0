@@ -47,10 +47,11 @@ struct ll_node *ll_before_last_node(struct ll_node *n) {
   struct ll_node *m = n;
   struct ll_node *b = m;
 
-  if (n != NULL)
+  if (n != NULL) {
     while (m->next != NULL) {
-        b = m;
-        m = m->next;
+      b = m;
+      m = m->next;
     }
+  }
   return b;
 }

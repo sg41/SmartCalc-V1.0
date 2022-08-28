@@ -6,20 +6,6 @@
 
 #include "stack.h"
 
-double expo(const double base, const double power) {
-  double result;
-  if (power < 0) {
-    result = 0;
-  } else {
-    double res = 1;
-    for (int i = 0; i < power; i++) {
-      res *= base;
-    }
-    result = res;
-  }
-  return result;
-}
-
 double rpn_reduce(const struct expr *e, double x) {
   struct stk *k = stk_new();
   double a, b;
@@ -48,10 +34,10 @@ double rpn_reduce(const struct expr *e, double x) {
           stk_push(k, OPERAND, a * b);
           break;
         case '/':
-          stk_push(k, OPERAND, a / b);
+          stk_push(k, OPERAND, (b != 0) ? a / b : NAN);
           break;
         case '^':
-          stk_push(k, OPERAND, expo(a, b));
+          stk_push(k, OPERAND, pow(a, b));
           break;
         case 'm':
           stk_push(k, OPERAND, -a);

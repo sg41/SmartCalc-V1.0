@@ -16,10 +16,11 @@ int main(int argc, char *argv[]) {
   struct expr *postfix;
   char string[MAXSTR + 1] = {0};
 
-  if (argc > 1)
-    for (int i = 1; i < argc; i++) strcat(string, argv[i]);
-  else
+  if (argc > 1) {
+    for (int i = 1; i < argc; i++) strncat(string, argv[i], MAXSTR);
+  } else {
     input(string);
+  }
 
   if (strlen(string)) {
     int good = 1;
@@ -31,7 +32,7 @@ int main(int argc, char *argv[]) {
     }
     expr_destroy(&infix);
   }
-  return 1;
+  return 0;
 }
 
 char *no_space(char *strin) {

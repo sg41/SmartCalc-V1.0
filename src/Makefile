@@ -36,8 +36,8 @@ rpr/core.o: rpr/core.c rpr/core.h
 
 check: $(SOURCES)
 	cp $(ROOT)/materials/linters/CPPLINT.cfg ./
-	sed -i ".bak" "s/\t/    /g" $(SOURCES)
-	sed -i ".bak" "s/[ \t]*$$//g" $(SOURCES)
+	sed -i".bak" "s/\t/    /g" $(SOURCES)
+	sed -i".bak" "s/[ \t]*$$//g" $(SOURCES)
 	python3 $(ROOT)/materials/linters/cpplint.py --extensions=c $(SOURCES)
 	python3 $(ROOT)/materials/linters/cpplint.py --extensions=c $(HEADERS)
 

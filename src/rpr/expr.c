@@ -150,7 +150,7 @@ struct expr *expr_from_string(char *a, int *good) {
     if (infix->head->state == OPERATOR) {
       *good = 0;
     } else {
-      while (*p) {
+      while (*p && *good) {
         p = one_expr_from_string(p, &infix, good, &parents);
         unsigned int state, prev_state;
         state = ll_last_node(infix->head)->state;
