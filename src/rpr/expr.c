@@ -179,12 +179,15 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
   } else if (strncmp(src_str, "ctg(", 4) == 0) {
     expr_add_symbol(infix, FUNCTION, 'g');
     src_str += 3;
+  } else if (strncmp(src_str, "abs(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'a');
+    src_str += 3;
+  } else if (strncmp(src_str, "log(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'l');
+    src_str += 3;
   } else if (strncmp(src_str, "sqrt(", 5) == 0) {
     expr_add_symbol(infix, FUNCTION, 'q');
     src_str += 4;
-  } else if (strncmp(src_str, "ln(", 3) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'l');
-    src_str += 2;
   } else if (*src_str == 'x' || *src_str == 'X') {
     expr_add_symbol(infix, VARIABLE, 'x');
     src_str++;

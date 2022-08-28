@@ -61,13 +61,13 @@ int input(char *s) {
 }
 
 int draw_graph(double (*calc)(struct expr *, double), struct expr *postfix) {
-  double scalex = (MAXX - MINX) / MAXI;
-  double scaley = MAXJ / (MAXY - MINY);
+  double scalex = (double)(MAXX - MINX) / MAXI;
+  double scaley = (double)MAXJ / (MAXY - MINY);
   int i, j;
   for (j = 0; j < MAXJ; j++) {
-    double x = 0;
+    double x = MINX;
     for (i = 0; i < MAXI; i++) {
-      if ((int)round(calc(postfix, x) * scaley + (MAXJ - scaley)) - 1 == j) {
+      if ((int)round(calc(postfix, x) * scaley + round(MAXJ / 2)) == j) {
         printf("*");
       } else {
         printf(".");
