@@ -9,14 +9,15 @@
 #define R_BRACKET 5
 #define FUNCTION 6
 
-#define ADD_SCORE 1
-#define SUB_SCORE 1
-#define MULT_SCORE 2
-#define DIV_SCORE 2
-#define EXP_SCORE 3
-#define L_SCORE 6
-#define R_SCORE 6
-#define U_SCORE 5
+#define ADD_SCORE 2
+#define SUB_SCORE 2
+#define MULT_SCORE 4
+#define DIV_SCORE 4
+#define FUNC_SCORE 4
+#define EXP_SCORE 4
+#define U_SCORE 10
+#define L_SCORE 12
+#define R_SCORE 12
 
 struct expr {
   unsigned int length;

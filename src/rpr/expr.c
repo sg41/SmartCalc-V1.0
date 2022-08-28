@@ -17,7 +17,9 @@ int is_space(char c) { return (strchr(" \t\n\r", c)) ? 1 : 0; }
 int is_delim(char c) { return (strchr("+-/*%^()", c) || is_space(c)) ? 1 : 0; }
 
 /* Возвращает значение ИСТИНА, если с является цифрой или точкой */
-int is_digit(char c) { return (c >= '0' && c <= '9') || c == '.'; }
+int is_digit(char c) {
+  return (c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e' || c == 'E';
+}
 
 /* Возвращает значение ИСТИНА, если с является буквой */
 int is_alpha(char c) { return c >= 'A' && c <= 'z'; }
@@ -57,7 +59,7 @@ void expr_add_symbol(struct expr *e, const unsigned int s, const double d) {
 }
 
 unsigned int precedence(const struct ll_node *n) {
-  unsigned int score;
+  unsigned int score = 0;
   if (n != NULL) {
     switch ((char)n->datum) {
       case '+':
@@ -81,13 +83,14 @@ unsigned int precedence(const struct ll_node *n) {
       case ')':
         score = R_SCORE;
         break;
+      case 'a':
       case 's':
       case 'c':
       case 't':
       case 'g':
       case 'q':
       case 'l':
-        score = EXP_SCORE;
+        score = FUNC_SCORE;
         break;
       case 'p':
       case 'm':
@@ -96,8 +99,6 @@ unsigned int precedence(const struct ll_node *n) {
       default:
         break;
     }
-  } else {
-    score = 0;
   }
   return score;
 }
@@ -120,12 +121,19 @@ struct expr *expr_shunt(const struct expr *infix) {
     } else if ((i->state == R_BRACKET)) {  // Если скобка закрылась
       while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
       stk_pop(opstack);  // Забираем из стека открывающуюся скобку
+      if (stk_peek_status(opstack) == FUNCTION) stack_to_expr(rpn, opstack);
+    } else if ((i->state == FUNCTION)) {  // Если это функция
+      stk_push(opstack, i->state, i->datum);
     } else {  // Если это оператор
+      // while ((opstack->depth > 0) &&
+      //        ((precedence(opstack->top) > precedence(i)) ||
+      //         ((precedence(opstack->top) == precedence(i)) &&
+      //          !(i->datum != '^'))) &&
+      //        (opstack->top->datum != '('))
       while ((opstack->depth > 0) &&
              ((precedence(opstack->top) > precedence(i)) ||
-              ((precedence(opstack->top) == precedence(i)) &&
-               !(i->datum != '^'))) &&
-             (opstack->top->datum != '('))
+              ((precedence(opstack->top) == precedence(i)))) &&
+             (stk_peek(opstack) != '('))
         stack_to_expr(rpn, opstack);
       stk_push(opstack, i->state, i->datum);
     }
@@ -137,33 +145,8 @@ struct expr *expr_shunt(const struct expr *infix) {
 
 double get_operand(const char *a) {
   double d;
-  sscanf(a, "%lf", &d);
+  sscanf(a, "%lg", &d);
   return d;
-}
-
-struct expr *expr_from_string(char *a, int *good) {
-  char *p = a;
-  struct expr *infix = NULL;
-  int parents = 0;
-  if (p && *p) {
-    p = one_expr_from_string(p, &infix, good, &parents);
-    if (infix->head->state == OPERATOR) {
-      *good = 0;
-    } else {
-      while (*p && *good) {
-        p = one_expr_from_string(p, &infix, good, &parents);
-        unsigned int state, prev_state;
-        state = ll_last_node(infix->head)->state;
-        prev_state = ll_before_last_node(infix->head)->state;
-        if (state == prev_state && state != L_BRACKET && state != R_BRACKET) {
-          *good = 0;
-          break;
-        }
-      }
-    }
-  }
-  if (parents != 0) *good = 0;
-  return infix;
 }
 
 char *expr_add_function(struct expr *infix, char *src_str, int *good) {
@@ -200,6 +183,45 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
   return src_str;
 }
 
+struct expr *expr_from_string(char *a, int *good) {
+  char *p = a;
+  struct expr *infix = NULL;
+  int parents = 0;
+  if (p && *p) {
+    p = one_expr_from_string(p, &infix, good, &parents);
+    struct ll_node *last = infix->head;
+    if (last->datum == '-' || last->datum == '+') {
+      last->state = UNARYOPERATOR;
+      last->datum = (last->datum == '+') ? 'p' : 'm';
+    }
+
+    if (infix->head->state == OPERATOR) {
+      *good = 0;
+    } else {
+      while (*p && *good) {
+        p = one_expr_from_string(p, &infix, good, &parents);
+        struct ll_node *last, *before;
+        last = ll_last_node(infix->head);
+        before = ll_before_last_node(infix->head);
+        if ((last->datum == '-' || last->datum == '+') &&
+            before->state != OPERAND) {
+          last->state = UNARYOPERATOR;
+          last->datum = (last->datum == '+') ? 'p' : 'm';
+        }
+        if (before->state == UNARYOPERATOR && last->state == OPERATOR) {
+          *good = 0;
+        }
+        if (last->state == before->state && last->state != L_BRACKET &&
+            last->state != R_BRACKET) {
+          *good = 0;
+        }
+      }
+    }
+  }
+  if (parents != 0) *good = 0;
+  return infix;
+}
+
 char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
                            int *parents) {
   struct expr *infix;
@@ -214,16 +236,16 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
   if (src_str && *src_str) {
     while (*src_str && is_space(*src_str)) ++src_str;  // Skip spaces
     if ((*src_str == '+') || (*src_str == '-')) {      // UNARY plus or minus
-      if (*(src_str + 1) &&
-          (is_alpha(*(src_str + 1)) || *(src_str + 1) == '(' ||
-           is_digit(*(src_str + 1)))) {
-        expr_add_symbol(infix, OPERAND, (*src_str == '-') ? -1 : 1);
-        expr_add_symbol(infix, OPERATOR, '*');
-        src_str++;
-      } else {
-        expr_add_symbol(infix, OPERATOR, *src_str);
-        src_str++;
-      }
+                                                       // if (*(src_str + 1) &&
+      //     (is_alpha(*(src_str + 1)) || *(src_str + 1) == '(' ||
+      //      is_digit(*(src_str + 1)))) {
+      //   expr_add_symbol(infix, OPERAND, (*src_str == '-') ? -1 : 1);
+      //   expr_add_symbol(infix, OPERATOR, '*');
+      //   src_str++;
+      // } else {
+      expr_add_symbol(infix, OPERATOR, *src_str);
+      src_str++;
+      // }
     } else if (is_oper(*src_str)) {  // Operator
       if (*src_str == '(') {         // Left bracket
         (*parents)++;
