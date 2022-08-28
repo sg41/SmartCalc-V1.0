@@ -6,15 +6,6 @@
 
 #include "stack.h"
 
-#define ADD_SCORE 1
-#define SUB_SCORE 1
-#define MULT_SCORE 2
-#define DIV_SCORE 2
-#define EXP_SCORE 3
-#define L_SCORE 4
-#define R_SCORE 4
-#define U_SCORE 5
-
 /* Возвращает значение ИСТИНА, если с является оператором. */
 int is_oper(char c) { return (strchr("+-/*%^()", c)) ? 1 : 0; }
 
@@ -33,29 +24,36 @@ int is_alpha(char c) { return c >= 'A' && c <= 'z'; }
 
 struct expr *expr_new(void) {
   struct expr *e = malloc(sizeof(*e));
-  e->length = 0;
-  e->head = NULL;
+  if (e != NULL) {
+    e->length = 0;
+    e->head = NULL;
+  }
   return e;
 }
 
 void expr_destroy(struct expr **e) {
   struct ll_node *tmp;
-  for (struct ll_node *i = (*e)->head; i != NULL; i = tmp) {
-    tmp = i->next;
-    ll_node_destroy(&i);
-    (*e)->length--;
+  if (e != NULL && *e != NULL) {
+    for (struct ll_node *i = (*e)->head;
+         (*e)->length > 0 && i != NULL && i->next != NULL; i = tmp) {
+      tmp = i->next;
+      ll_node_destroy(&i);
+      (*e)->length--;
+    }
+    free(*e);
+    (*e) = NULL;
   }
-  free(*e);
-  (*e) = NULL;
 }
 
 void expr_add_symbol(struct expr *e, const unsigned int s, const double d) {
-  if (e->length > 0) {
-    ll_node_append(e->head, s, d);
-  } else {
-    e->head = ll_node_new(s, d);
+  if (e != NULL) {
+    if (e->length > 0) {
+      ll_node_append(e->head, s, d);
+    } else {
+      e->head = ll_node_new(s, d);
+    }
+    (e->length)++;
   }
-  (e->length)++;
 }
 
 unsigned int precedence(const struct ll_node *n) {
@@ -104,56 +102,43 @@ unsigned int precedence(const struct ll_node *n) {
   return score;
 }
 
-void change_stack(struct expr *rpn, struct stk *opstack) {
+void stack_to_expr(struct expr *rpn, struct stk *opstack) {
   expr_add_symbol(rpn, stk_peek_status(opstack), stk_peek(opstack));
   stk_pop(opstack);
 }
-struct expr *expr_shunt(const struct expr *e) {
+
+struct expr *expr_shunt(const struct expr *infix) {
   struct stk *opstack = stk_new();
   struct expr *rpn = expr_new();
-  for (struct ll_node *i = e->head; i != NULL; i = i->next) {
+  for (struct ll_node *i = infix->head; i != NULL; i = i->next) {
     if (i->state == OPERAND) {  // Если это число
       expr_add_symbol(rpn, OPERAND, i->datum);
     } else if (i->state == VARIABLE) {  // Если это переменная
       expr_add_symbol(rpn, VARIABLE, i->datum);
-    } else if ((i->state == OPERATOR) &&
-               (i->datum == '(')) {  // Если это скобка открылась
+    } else if ((i->state == L_BRACKET)) {  // Если это скобка открылась
       stk_push(opstack, OPERATOR, i->datum);
-    } else if ((i->state == OPERATOR) &&
-               (i->datum == ')')) {  // Если скобка закрылась
-      while (stk_peek(opstack) != '(') change_stack(rpn, opstack);
-      stk_pop(opstack);
+    } else if ((i->state == R_BRACKET)) {  // Если скобка закрылась
+      while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
+      stk_pop(opstack);  // Забираем из стека открывающуюся скобку
     } else {  // Если это оператор
       while ((opstack->depth > 0) &&
              ((precedence(opstack->top) > precedence(i)) ||
               ((precedence(opstack->top) == precedence(i)) &&
                !(i->datum != '^'))) &&
              (opstack->top->datum != '('))
-        change_stack(rpn, opstack);
+        stack_to_expr(rpn, opstack);
       stk_push(opstack, i->state, i->datum);
     }
   }
-  while (opstack->depth > 0) change_stack(rpn, opstack);
+  while (opstack->depth > 0) stack_to_expr(rpn, opstack);
   stk_destroy(&opstack);
   return rpn;
 }
 
 double get_operand(const char *a) {
-  char buff[11] = "9999999999";
-  char *b = buff;
-  // int sign = 1;
-  if (*a == '-' || *a == '+') {
-    *b = *a;
-    a++;
-    b++;
-  }
-  while ((*a != '\0') && (((*a >= '0') && (*a <= '9')) || (*a == '.'))) {
-    *b = *a;
-    b++;
-    a++;
-  }
-  *b = '\0';
-  return atof(buff);
+  double d;
+  sscanf(a, "%lf", &d);
+  return d;
 }
 
 struct expr *expr_from_string(char *a, int *good) {
@@ -162,49 +147,60 @@ struct expr *expr_from_string(char *a, int *good) {
   int parents = 0;
   if (p && *p) {
     p = one_expr_from_string(p, &infix, good, &parents);
-    while (*p) {
-      p = one_expr_from_string(p, &infix, good, &parents);
+    if (infix->head->state == OPERATOR) {
+      *good = 0;
+    } else {
+      while (*p) {
+        p = one_expr_from_string(p, &infix, good, &parents);
+        unsigned int state, prev_state;
+        state = ll_last_node(infix->head)->state;
+        prev_state = ll_before_last_node(infix->head)->state;
+        if (state == prev_state && state != L_BRACKET && state != R_BRACKET) {
+          *good = 0;
+          break;
+        }
+      }
     }
   }
   if (parents != 0) *good = 0;
   return infix;
 }
 
-char *check_f(struct expr *infix, char *prog, int *good) {
-  if (strncmp(prog, "sin", 3) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 's');
-    prog += 3;
-  } else if (strncmp(prog, "cos", 3) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 'c');
-    prog += 3;
-  } else if (strncmp(prog, "tan", 3) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 't');
-    prog += 3;
-  } else if (strncmp(prog, "ctg", 3) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 'g');
-    prog += 3;
-  } else if (strncmp(prog, "sqrt", 4) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 'q');
-    prog += 4;
-  } else if (strncmp(prog, "ln", 2) == 0) {
-    expr_add_symbol(infix, UNARYOPERATOR, 'l');
-    prog += 2;
-  } else if (*prog == 'x' || *prog == 'X') {
+char *expr_add_function(struct expr *infix, char *src_str, int *good) {
+  if (strncmp(src_str, "sin(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 's');
+    src_str += 3;
+  } else if (strncmp(src_str, "cos(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'c');
+    src_str += 3;
+  } else if (strncmp(src_str, "tan(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 't');
+    src_str += 3;
+  } else if (strncmp(src_str, "ctg(", 4) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'g');
+    src_str += 3;
+  } else if (strncmp(src_str, "sqrt(", 5) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'q');
+    src_str += 4;
+  } else if (strncmp(src_str, "ln(", 3) == 0) {
+    expr_add_symbol(infix, FUNCTION, 'l');
+    src_str += 2;
+  } else if (*src_str == 'x' || *src_str == 'X') {
     expr_add_symbol(infix, VARIABLE, 'x');
-    prog++;
+    src_str++;
   } else {
-    while (prog && *prog && !is_delim(*prog)) {
-      prog++;
+    while (src_str && *src_str && !is_delim(*src_str)) {
+      src_str++;
     }
     *good = 0;
   }
-  return prog;
+  return src_str;
 }
 
 char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
                            int *parents) {
   struct expr *infix;
-  char *prog = str;
+  char *src_str = str;
 
   if (*infix_to_fill == NULL) {
     infix = expr_new();
@@ -212,36 +208,42 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
     infix = *infix_to_fill;
   }
 
-  if (prog && *prog) {
-    while (*prog && is_space(*prog)) ++prog;  // Skip spaces
-    if ((*prog == '+') || (*prog == '-')) {   // UNARY plus or minus
-      if (*(prog + 1) && (is_alpha(*(prog + 1)) || *(prog + 1) == '(' ||
-                          is_digit(*(prog + 1)))) {
-        expr_add_symbol(infix, OPERAND, (*prog == '-') ? -1 : 1);
+  if (src_str && *src_str) {
+    while (*src_str && is_space(*src_str)) ++src_str;  // Skip spaces
+    if ((*src_str == '+') || (*src_str == '-')) {      // UNARY plus or minus
+      if (*(src_str + 1) &&
+          (is_alpha(*(src_str + 1)) || *(src_str + 1) == '(' ||
+           is_digit(*(src_str + 1)))) {
+        expr_add_symbol(infix, OPERAND, (*src_str == '-') ? -1 : 1);
         expr_add_symbol(infix, OPERATOR, '*');
-        prog++;
+        src_str++;
       } else {
-        expr_add_symbol(infix, OPERATOR, *prog);
-        expr_add_symbol(infix, OPERAND, get_operand(prog));
-        prog++;
-        while (*prog && is_digit(*prog)) {
-          prog++;
-        }
+        expr_add_symbol(infix, OPERATOR, *src_str);
+        src_str++;
       }
-    } else if (is_oper(*prog)) {
-      if (*prog == '(') (*parents)++;
-      if (*prog == ')') (*parents)--;
-      expr_add_symbol(infix, OPERATOR, *prog);
-      prog++;
-    } else if (is_alpha(*prog)) {
-      prog = check_f(infix, prog, good);
-    } else if (is_digit(*prog)) {
-      expr_add_symbol(infix, OPERAND, get_operand(prog));
-      while (*prog && is_digit(*prog)) {
-        prog++;
+    } else if (is_oper(*src_str)) {  // Operator
+      if (*src_str == '(') {         // Left bracket
+        (*parents)++;
+        expr_add_symbol(infix, L_BRACKET, *src_str);
+      } else if (*src_str == ')') {  // right bracket
+        (*parents)--;
+        expr_add_symbol(infix, R_BRACKET, *src_str);
+      } else {  // Any other operator
+        expr_add_symbol(infix, OPERATOR, *src_str);
       }
+      src_str++;
+    } else if (is_alpha(*src_str)) {  // Function or variable
+      src_str = expr_add_function(infix, src_str, good);
+    } else if (is_digit(*src_str)) {  // Digit
+      expr_add_symbol(infix, OPERAND, get_operand(src_str));
+      while (*src_str && is_digit(*src_str)) {
+        src_str++;
+      }
+    } else {
+      *good = 0;
+      src_str++;
     }
   }
   *infix_to_fill = infix;
-  return prog;
+  return src_str;
 }
