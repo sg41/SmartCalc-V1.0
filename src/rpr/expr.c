@@ -36,18 +36,6 @@ struct expr *expr_new(void) {
 void expr_destroy(struct expr **e) {
   ll_destroy_list((*e)->head);
   free(*e);
-  /*struct ll_node *tmp;
-  if (e != NULL && *e != NULL) {
-    for (struct ll_node *i = (*e)->head;
-         (*e)->length > 0 && i != NULL && i->next != NULL; i = tmp) {
-      tmp = i->next;
-      ll_node_destroy(&i);
-      (*e)->length--;
-    }
-    free(*e);
-    (*e) = NULL;
-  }
-  */
 }
 
 void expr_add_symbol(struct expr *e, const unsigned int s, const double d) {

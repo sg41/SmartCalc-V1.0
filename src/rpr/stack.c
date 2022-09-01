@@ -15,18 +15,6 @@ struct stk *stk_new(void) {
 void stk_destroy(struct stk **k) {
   if ((*k)->top != NULL) ll_destroy_list((*k)->top);
   free(*k);
-
-  /*struct ll_node *tmp;
-  if (k != NULL && *k != NULL && (*k)->top != NULL) {
-    for (struct ll_node *i = (*k)->top; (*k)->depth > 0 && i->next != NULL;
-         i = tmp) {
-      tmp = i->next;
-      ll_node_destroy(&i);
-      (*k)->depth--;
-    }
-    free(*k);
-    (*k) = NULL;
-  }*/
 }
 
 void stk_push(struct stk *k, const unsigned int s, const double d) {
