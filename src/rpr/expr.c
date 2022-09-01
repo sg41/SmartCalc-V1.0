@@ -125,11 +125,6 @@ struct expr *expr_shunt(const struct expr *infix) {
     } else if ((i->state == FUNCTION)) {  // Если это функция
       stk_push(opstack, i->state, i->datum);
     } else {  // Если это оператор
-      // while ((opstack->depth > 0) &&
-      //        ((precedence(opstack->top) > precedence(i)) ||
-      //         ((precedence(opstack->top) == precedence(i)) &&
-      //          !(i->datum != '^'))) &&
-      //        (opstack->top->datum != '('))
       while ((opstack->depth > 0) &&
              ((precedence(opstack->top) > precedence(i)) ||
               ((precedence(opstack->top) == precedence(i)))) &&
@@ -167,6 +162,9 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
     src_str += 3;
   } else if (strncmp(src_str, "log(", 4) == 0) {
     expr_add_symbol(infix, FUNCTION, 'l');
+    src_str += 3;
+  } else if (strncmp(src_str, "mod", 3) == 0) {
+    expr_add_symbol(infix, FUNCTION, '%');
     src_str += 3;
   } else if (strncmp(src_str, "sqrt(", 5) == 0) {
     expr_add_symbol(infix, FUNCTION, 'q');
@@ -235,19 +233,8 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
 
   if (src_str && *src_str) {
     while (*src_str && is_space(*src_str)) ++src_str;  // Skip spaces
-    if ((*src_str == '+') || (*src_str == '-')) {      // UNARY plus or minus
-                                                       // if (*(src_str + 1) &&
-      //     (is_alpha(*(src_str + 1)) || *(src_str + 1) == '(' ||
-      //      is_digit(*(src_str + 1)))) {
-      //   expr_add_symbol(infix, OPERAND, (*src_str == '-') ? -1 : 1);
-      //   expr_add_symbol(infix, OPERATOR, '*');
-      //   src_str++;
-      // } else {
-      expr_add_symbol(infix, OPERATOR, *src_str);
-      src_str++;
-      // }
-    } else if (is_oper(*src_str)) {  // Operator
-      if (*src_str == '(') {         // Left bracket
+    if (is_oper(*src_str)) {                           // Operator
+      if (*src_str == '(') {                           // Left bracket
         (*parents)++;
         expr_add_symbol(infix, L_BRACKET, *src_str);
       } else if (*src_str == ')') {  // right bracket
