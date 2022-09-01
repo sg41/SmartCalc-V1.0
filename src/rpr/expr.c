@@ -72,6 +72,7 @@ unsigned int precedence(const struct ll_node *n) {
         score = MULT_SCORE;
         break;
       case '/':
+      case '%':
         score = DIV_SCORE;
         break;
       case '^':
@@ -181,6 +182,11 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
   return src_str;
 }
 
+void make_unary_operator(struct ll_node *s) {
+  s->state = UNARYOPERATOR;
+  s->datum = (s->datum == '+') ? 'p' : 'm';
+};
+
 struct expr *expr_from_string(char *a, int *good) {
   char *p = a;
   struct expr *infix = NULL;
@@ -188,24 +194,18 @@ struct expr *expr_from_string(char *a, int *good) {
   if (p && *p) {
     p = one_expr_from_string(p, &infix, good, &parents);
     struct ll_node *last = infix->head;
-    if (last->datum == '-' || last->datum == '+') {
-      last->state = UNARYOPERATOR;
-      last->datum = (last->datum == '+') ? 'p' : 'm';
-    }
-
+    if (last->datum == '-' || last->datum == '+') make_unary_operator(last);
     if (infix->head->state == OPERATOR) {
       *good = 0;
     } else {
       while (*p && *good) {
         p = one_expr_from_string(p, &infix, good, &parents);
-        struct ll_node *last, *before;
+        struct ll_node *before;
         last = ll_last_node(infix->head);
         before = ll_before_last_node(infix->head);
         if ((last->datum == '-' || last->datum == '+') &&
-            before->state != OPERAND) {
-          last->state = UNARYOPERATOR;
-          last->datum = (last->datum == '+') ? 'p' : 'm';
-        }
+            before->state != OPERAND)
+          make_unary_operator(last);
         if (before->state == UNARYOPERATOR && last->state == OPERATOR) {
           *good = 0;
         }
