@@ -13,7 +13,10 @@ struct stk *stk_new(void) {
 }
 
 void stk_destroy(struct stk **k) {
-  struct ll_node *tmp;
+  if ((*k)->top != NULL) ll_destroy_list((*k)->top);
+  free(*k);
+
+  /*struct ll_node *tmp;
   if (k != NULL && *k != NULL && (*k)->top != NULL) {
     for (struct ll_node *i = (*k)->top; (*k)->depth > 0 && i->next != NULL;
          i = tmp) {
@@ -23,7 +26,7 @@ void stk_destroy(struct stk **k) {
     }
     free(*k);
     (*k) = NULL;
-  }
+  }*/
 }
 
 void stk_push(struct stk *k, const unsigned int s, const double d) {

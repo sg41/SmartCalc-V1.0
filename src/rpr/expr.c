@@ -34,7 +34,9 @@ struct expr *expr_new(void) {
 }
 
 void expr_destroy(struct expr **e) {
-  struct ll_node *tmp;
+  ll_destroy_list((*e)->head);
+  free(*e);
+  /*struct ll_node *tmp;
   if (e != NULL && *e != NULL) {
     for (struct ll_node *i = (*e)->head;
          (*e)->length > 0 && i != NULL && i->next != NULL; i = tmp) {
@@ -45,6 +47,7 @@ void expr_destroy(struct expr **e) {
     free(*e);
     (*e) = NULL;
   }
+  */
 }
 
 void expr_add_symbol(struct expr *e, const unsigned int s, const double d) {
@@ -185,7 +188,7 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
 void make_unary_operator(struct ll_node *s) {
   s->state = UNARYOPERATOR;
   s->datum = (s->datum == '+') ? 'p' : 'm';
-};
+}
 
 struct expr *expr_from_string(char *a, int *good) {
   char *p = a;

@@ -1,15 +1,21 @@
-#ifndef SRC_RPR_LLIST_H_
-#define SRC_RPR_LLIST_H_
+#include "../rpr/core.h"
+#include "../rpr/expr.h"
+#include "../rpr/llist.h"
+#include "../rpr/stack.h"
+#define EPS 1e-7
+#include <math.h>
+#include <stdlib.h>
 
-#include <assert.h>
+#test ll_list_1
+struct ll_node *l = ll_node_new(1, 2.2);
+uint expected_result, actual_result;
+expected_result = 1;
+actual_result = l->state;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert(fabs(2.2 - l->datum) < EPS);
+ll_destroy_list(l);
 
-struct ll_node {
-  unsigned int state;
-  double datum;
-  struct ll_node *next;
-};
-
-struct ll_node *ll_node_new(const unsigned int s, const double d);
+/*
 void ll_node_destroy(struct ll_node **n);
 struct ll_node *ll_node_prepend(struct ll_node *n, const unsigned int s,
                                 const double d);
@@ -19,5 +25,4 @@ struct ll_node *ll_remove_node(struct ll_node *n, struct ll_node *root);
 void ll_destroy_list(struct ll_node *root);
 struct ll_node *ll_last_node(struct ll_node *n);
 struct ll_node *ll_before_last_node(struct ll_node *n);
-
-#endif  // SRC_RPR_LLIST_H_
+*/
