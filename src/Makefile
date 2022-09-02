@@ -57,14 +57,16 @@ test: $(TEST_C) $(LIB)
 	$(CC) $(CCOPTS) $(TEST_C) -o test.app $(LDOPTS) $(LIBS) -l$(LIB)
 	-./$(TEST_APP)
 
-check: $(SOURCES)
+check: $(SOURCES) graph.c $(HEADERS) graph.h
 	cp $(ROOT)/materials/linters/.clang-format ./
 	clang-format -i $(SOURCES)
 	clang-format -i $(HEADERS)
+	clang-format -i graph.c graph.h
 	clang-format -n $(SOURCES)
 	clang-format -n $(HEADERS)
+	clang-format -n graph.c graph.h
 
-check2: $(SOURCES)
+check2: $(SOURCES) graph.c $(HEADERS) graph.h
 	cppcheck --enable=all --suppress=missingIncludeSystem $(ROOT)/src/
 
 .PHONY: all clean rebuild
