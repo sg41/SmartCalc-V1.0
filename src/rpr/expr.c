@@ -182,6 +182,7 @@ struct expr *expr_from_string(char *a, int *good) {
   char *p = a;
   struct expr *infix = NULL;
   int parents = 0;
+  *good = 1;
   if (p && *p) {
     p = one_expr_from_string(p, &infix, good, &parents);
     struct ll_node *last = infix->head;

@@ -54,7 +54,7 @@ $(TEST_C): tests/*.check
 
 test: $(TEST_C) $(LIB)
 	$(CC) $(CCOPTS) $(TEST_C) -o test.app $(LDOPTS) $(LIBS) -l$(LIB)
-	./$(TEST_APP)
+	-./$(TEST_APP)
 
 check: $(SOURCES)
 	cp $(ROOT)/materials/linters/CPPLINT.cfg ./

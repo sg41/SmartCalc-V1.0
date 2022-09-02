@@ -38,8 +38,8 @@ struct ll_node *ll_remove_node(struct ll_node *n, struct ll_node *root) {
 }
 
 void ll_destroy_list(struct ll_node *root) {
-  struct ll_node *n = root->next;
   if (root != NULL) {
+    struct ll_node *n = root->next;
     while (n != NULL) {
       ll_remove_node(n, root);
       n = root->next;

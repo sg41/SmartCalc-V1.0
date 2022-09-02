@@ -3,6 +3,8 @@
 #include "../rpr/llist.h"
 #include "../rpr/stack.h"
 #define EPS 1e-7
+#include <float.h>
+#include <limits.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -142,10 +144,102 @@ stk_destroy(&s);
 struct expr *expr_new(void);
 void expr_destroy(struct expr **e);
 void expr_add_symbol(struct expr *e, const unsigned int s, const double d);
-void expr_print(const struct expr *e);
 struct expr *expr_shunt(const struct expr *e);
-struct expr *expr_from_array(const char *a);
 char *one_expr_from_string(char *prog, struct expr **infix_to_fill, int *good,
                            int *parents);
 struct expr *expr_from_string(char *a, int *good);
 */
+#test expr_1
+struct expr *e = expr_new();
+uint expected_result, actual_result;
+expected_result = 0;
+actual_result = e->length;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_eq(e->head, NULL);
+expr_destroy(&e);
+
+#test expr_2
+struct expr *e = expr_new();
+uint expected_result, actual_result;
+expr_add_symbol(e, 77, DBL_MAX);
+expected_result = 1;
+actual_result = e->length;
+ck_assert_ptr_ne(e->head, NULL);
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_uint_eq(e->head->state, 77);
+ck_assert(fabs(DBL_MAX - e->head->datum) < EPS);
+expr_destroy(&e);
+
+#test expr_3
+struct expr *e = expr_new();
+uint expected_result, actual_result;
+expr_add_symbol(e, 77, DBL_MAX);
+expected_result = 1;
+actual_result = e->length;
+ck_assert_ptr_ne(e->head, NULL);
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_uint_eq(e->head->state, 77);
+ck_assert(fabs(DBL_MAX - e->head->datum) < EPS);
+expr_destroy(&e);
+
+#test expr_4
+char str[1000] = "sin(cos(x^2)^(1*-100))*x";
+struct expr *e;
+uint expected_result, actual_result;
+int res = 0;
+e = expr_from_string(str, &res);
+expected_result = 18;
+actual_result = e->length;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_int_eq(res, 1);
+expr_destroy(&e);
+
+#test expr_5
+char str[1000] = "sin(cos(x^2)^(1*-100))*x";
+struct expr *e, *r;
+uint expected_result, actual_result;
+int res = 0;
+e = expr_from_string(str, &res);
+expected_result = 18;
+actual_result = e->length;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_int_eq(res, 1);
+r = expr_shunt(e);
+expected_result = 12;
+actual_result = r->length;
+ck_assert_uint_eq(expected_result, actual_result);
+expr_destroy(&r);
+
+#test expr_all_functins
+char str[1000] = "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(x/2)-log(x mod 2)";
+struct expr *e, *r;
+uint expected_result, actual_result;
+int res = 0;
+e = expr_from_string(str, &res);
+expected_result = 37;
+actual_result = e->length;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_int_eq(res, 1);
+r = expr_shunt(e);
+expected_result = 37 - 12;
+actual_result = r->length;
+ck_assert_uint_eq(expected_result, actual_result);
+expr_destroy(&r);
+
+#test expr_wrong_formula
+char str[1000] =
+    "sinus(cosinus(x^^2)^^^^(++1-*-100))*x()   *tangens(X)+sqrt(-x/2)-log(x "
+    "mod 2)";
+struct expr *e, *r;
+uint expected_result, actual_result;
+int res = 0;
+e = expr_from_string(str, &res);
+expected_result = 37;
+actual_result = e->length;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_int_eq(res, 0);
+r = expr_shunt(e);
+expected_result = 37 - 12;
+actual_result = r->length;
+ck_assert_uint_eq(expected_result, actual_result);
+expr_destroy(&r);
