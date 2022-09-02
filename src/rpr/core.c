@@ -36,37 +36,53 @@ double rpn_reduce(const struct expr *e, double x) {
         case '/':
           stk_push(k, OPERAND, (b != 0) ? a / b : NAN);
           break;
+        case '%':
+          stk_push(k, OPERAND, fmod(a, b));
+          break;
         case '^':
           stk_push(k, OPERAND, pow(a, b));
           break;
-        case 'm':
+        case UNARY_MINUS:
           stk_push(k, OPERAND, -a);
           break;
-        case 'p':
+        case UNARY_PLUS:
           stk_push(k, OPERAND, a);
           break;
-        case 's':
+        case sin_FUNCTION:
           stk_push(k, OPERAND, sin(a));
           break;
-        case 'c':
+        case cos_FUNCTION:
           stk_push(k, OPERAND, cos(a));
           break;
-        case 't':
+        case tan_FUNCTION:
           stk_push(k, OPERAND, tan(a));
           break;
-        case 'g':
+        case ctg_FUNCTION:
           stk_push(k, OPERAND, tan(3.14 / 2 - a));
           break;
-        case 'q':
+        case sqrt_FUNCTION:
           stk_push(k, OPERAND, sqrt(a));
           break;
-        case 'l':
+        case log_FUNCTION:
+          stk_push(k, OPERAND, log10(a));
+          break;
+        case ln_FUNCTION:
           stk_push(k, OPERAND, log(a));
           break;
-        case 'a':
+        case asin_FUNCTION:
+          stk_push(k, OPERAND, asin(a));
+          break;
+        case acos_FUNCTION:
+          stk_push(k, OPERAND, acos(a));
+          break;
+        case atan_FUNCTION:
+          stk_push(k, OPERAND, atan(a));
+          break;
+        case abs_FUNCTION:
           stk_push(k, OPERAND, fabs(a));
           break;
         default:
+          assert(0);
           break;
       }
     }

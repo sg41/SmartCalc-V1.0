@@ -29,10 +29,10 @@ struct ll_node *ll_remove_node(struct ll_node *n, struct ll_node *root) {
     before->next = n->next;
     ll_node_destroy(&n);
     result = before->next;
-  } else if (n == root && root->next == NULL) {
+  } else if (n == root && root != NULL && root->next == NULL) {
     ll_node_destroy(&n);
-  } else if (root->next != NULL) {
-    assert("CAN'T REMOVE ROOT");
+  } else {
+    assert(0);
   }
   return result;
 }

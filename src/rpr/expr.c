@@ -75,17 +75,21 @@ unsigned int precedence(const struct ll_node *n) {
       case ')':
         score = R_SCORE;
         break;
-      case 'a':
-      case 's':
-      case 'c':
-      case 't':
-      case 'g':
-      case 'q':
-      case 'l':
+      case sin_FUNCTION:
+      case cos_FUNCTION:
+      case tan_FUNCTION:
+      case ctg_FUNCTION:
+      case abs_FUNCTION:
+      case log_FUNCTION:
+      case ln_FUNCTION:
+      case sqrt_FUNCTION:
+      case asin_FUNCTION:
+      case acos_FUNCTION:
+      case atan_FUNCTION:
         score = FUNC_SCORE;
         break;
-      case 'p':
-      case 'm':
+      case UNARY_MINUS:
+      case UNARY_PLUS:
         score = U_SCORE;
         break;
       default:
@@ -116,6 +120,8 @@ struct expr *expr_shunt(const struct expr *infix) {
       if (stk_peek_status(opstack) == FUNCTION) stack_to_expr(rpn, opstack);
     } else if ((i->state == FUNCTION)) {  // Если это функция
       stk_push(opstack, i->state, i->datum);
+    } else if (i->state == ERROR) {
+      i = NULL;
     } else {  // Если это оператор
       while ((opstack->depth > 0) &&
              ((precedence(opstack->top) > precedence(i)) ||
@@ -138,36 +144,49 @@ double get_operand(const char *a) {
 
 char *expr_add_function(struct expr *infix, char *src_str, int *good) {
   if (strncmp(src_str, "sin(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 's');
+    expr_add_symbol(infix, FUNCTION, sin_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "cos(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'c');
+    expr_add_symbol(infix, FUNCTION, cos_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "tan(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 't');
+    expr_add_symbol(infix, FUNCTION, tan_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "ctg(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'g');
+    expr_add_symbol(infix, FUNCTION, ctg_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "abs(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'a');
+    expr_add_symbol(infix, FUNCTION, abs_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "log(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'l');
+    expr_add_symbol(infix, FUNCTION, log_FUNCTION);
     src_str += 3;
+  } else if (strncmp(src_str, "ln(", 3) == 0) {
+    expr_add_symbol(infix, FUNCTION, ln_FUNCTION);
+    src_str += 2;
   } else if (strncmp(src_str, "mod", 3) == 0) {
-    expr_add_symbol(infix, FUNCTION, '%');
+    expr_add_symbol(infix, OPERATOR, mod_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "sqrt(", 5) == 0) {
-    expr_add_symbol(infix, FUNCTION, 'q');
+    expr_add_symbol(infix, FUNCTION, sqrt_FUNCTION);
+    src_str += 4;
+  } else if (strncmp(src_str, "asin(", 5) == 0) {
+    expr_add_symbol(infix, FUNCTION, asin_FUNCTION);
+    src_str += 4;
+  } else if (strncmp(src_str, "acos(", 5) == 0) {
+    expr_add_symbol(infix, FUNCTION, acos_FUNCTION);
+    src_str += 4;
+  } else if (strncmp(src_str, "atan(", 5) == 0) {
+    expr_add_symbol(infix, FUNCTION, atan_FUNCTION);
     src_str += 4;
   } else if (*src_str == 'x' || *src_str == 'X') {
     expr_add_symbol(infix, VARIABLE, 'x');
     src_str++;
   } else {
-    while (src_str && *src_str && !is_delim(*src_str)) {
+    while (is_alpha(*src_str)) {
       src_str++;
     }
+    expr_add_symbol(infix, ERROR, '\0');
     *good = 0;
   }
   return src_str;
@@ -198,7 +217,9 @@ struct expr *expr_from_string(char *a, int *good) {
         if ((last->datum == '-' || last->datum == '+') &&
             before->state != OPERAND)
           make_unary_operator(last);
-        if (before->state == UNARYOPERATOR && last->state == OPERATOR) {
+        if (before->state == UNARYOPERATOR &&
+            (last->state == OPERATOR || last->state == R_BRACKET ||
+             last->state == L_BRACKET)) {
           *good = 0;
         }
         if (last->state == before->state && last->state != L_BRACKET &&
@@ -207,6 +228,10 @@ struct expr *expr_from_string(char *a, int *good) {
         }
       }
     }
+  } else {
+    infix = expr_new();
+    expr_add_symbol(infix, ERROR, '\0');
+    *good = 0;
   }
   if (parents != 0) *good = 0;
   return infix;
@@ -244,6 +269,7 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
         src_str++;
       }
     } else {
+      expr_add_symbol(infix, ERROR, '\0');
       *good = 0;
       src_str++;
     }

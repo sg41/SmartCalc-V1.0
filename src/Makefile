@@ -1,5 +1,6 @@
 LDOPTS = -L. -lm -lcheck
-CCOPTS = -Wall -Werror -Wextra -DDEBUG=0
+CCOPTS = -Wall -Werror -Wextra 
+#-DNDEBUG
 CC=gcc
 APP_ARGS="sin(cos(x^2)^(1*-100))*x"
 TEST_APP=test.app
@@ -57,11 +58,11 @@ test: $(TEST_C) $(LIB)
 	-./$(TEST_APP)
 
 check: $(SOURCES)
-	cp $(ROOT)/materials/linters/CPPLINT.cfg ./
-	sed -i".bak" "s/\t/    /g" $(SOURCES)
-	sed -i".bak" "s/[ \t]*$$//g" $(SOURCES)
-	python3 $(ROOT)/materials/linters/cpplint.py --extensions=c $(SOURCES)
-	python3 $(ROOT)/materials/linters/cpplint.py --extensions=c $(HEADERS)
+	cp $(ROOT)/materials/linters/.clang-format ./
+	clang-format -i $(SOURCES)
+	clang-format -i $(HEADERS)
+	clang-format -n $(SOURCES)
+	clang-format -n $(HEADERS)
 
 check2: $(SOURCES)
 	cppcheck --enable=all --suppress=missingIncludeSystem $(ROOT)/src/
@@ -69,15 +70,15 @@ check2: $(SOURCES)
 .PHONY: all clean rebuild
 
 clean:
-	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C)
-	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info
+	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(OBJECTS:.o=.h.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C)
+	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format
 
 rebuild: clean all
 
 leaks: $(APP)
 	$(LEAKS) $(APP) $(APP_ARGS)
 
-leaks_test: test
+test_leaks: test
 	$(LEAKS) ./$(TEST_APP) $(APP_ARGS)
 
 gcov_report: clean $(TEST_C)

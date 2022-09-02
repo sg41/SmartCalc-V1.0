@@ -209,8 +209,9 @@ expected_result = 12;
 actual_result = r->length;
 ck_assert_uint_eq(expected_result, actual_result);
 expr_destroy(&r);
+expr_destroy(&e);
 
-#test expr_all_functins
+#test expr_many_functions
 char str[1000] = "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(x/2)-log(x mod 2)";
 struct expr *e, *r;
 uint expected_result, actual_result;
@@ -224,22 +225,32 @@ r = expr_shunt(e);
 expected_result = 37 - 12;
 actual_result = r->length;
 ck_assert_uint_eq(expected_result, actual_result);
+expr_destroy(&e);
 expr_destroy(&r);
 
 #test expr_wrong_formula
-char str[1000] =
-    "sinus(cosinus(x^^2)^^^^(++1-*-100))*x()   *tangens(X)+sqrt(-x/2)-log(x "
-    "mod 2)";
-struct expr *e, *r;
-uint expected_result, actual_result;
+char str[10][1000] = {
+    "sinus(X)",
+    "sin(eX)",
+    "sinus(cosinus(x^^2)^^^^(++1-*-100))*x(         )*tangens(X)+sqrt("
+    "-x/2)-log(x mod 2)",
+    "",
+    {0},
+    "+-x*cos(((",
+    "mod 4",
+    "cos(-x-)",
+    "2 modulus 3",
+    "2 -mod 4"};
+
+struct expr *e;
+uint expected_result[10] = {1, 3, 1, 1, 1, 2, 1, 6, 3, 3}, actual_result;
 int res = 0;
-e = expr_from_string(str, &res);
-expected_result = 37;
-actual_result = e->length;
-ck_assert_uint_eq(expected_result, actual_result);
-ck_assert_int_eq(res, 0);
-r = expr_shunt(e);
-expected_result = 37 - 12;
-actual_result = r->length;
-ck_assert_uint_eq(expected_result, actual_result);
-expr_destroy(&r);
+// expected_result[1] = 3;
+// expected_result[5] = 2;
+for (int i = 0; i < 10; i++) {
+  e = expr_from_string(str[i], &res);
+  actual_result = e->length;
+  ck_assert_uint_eq(expected_result[i], actual_result);
+  ck_assert_int_eq(res, 0);
+  expr_destroy(&e);
+}

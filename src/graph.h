@@ -3,12 +3,16 @@
 
 #define MAXSTR 10000
 
-#define D(fmt, ...)                      \
-  do {                                   \
-    if (DEBUG) {                         \
-      fprintf(stderr, fmt, __VA_ARGS__); \
-    }                                    \
+#ifdef NDEBUG
+#define D(fmt, ...) \
+  do {              \
   } while (0)
+#else /* Not NDEBUG.  */
+#define D(fmt, ...)                    \
+  do {                                 \
+    fprintf(stderr, fmt, __VA_ARGS__); \
+  } while (0)
+#endif
 
 #define MINX -3
 #define MAXX 3  // 4 * 3.14

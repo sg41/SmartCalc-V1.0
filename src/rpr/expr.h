@@ -1,6 +1,23 @@
 #ifndef SRC_RPR_EXPR_H_
 #define SRC_RPR_EXPR_H_
 
+// Functions
+#define sin_FUNCTION 's'
+#define cos_FUNCTION 'c'
+#define tan_FUNCTION 't'
+#define ctg_FUNCTION 'g'
+#define abs_FUNCTION 'a'
+#define log_FUNCTION 'l'
+#define ln_FUNCTION 'e'
+#define sqrt_FUNCTION 'q'
+#define asin_FUNCTION 'i'
+#define acos_FUNCTION 'o'
+#define atan_FUNCTION 'n'
+// Operators:
+#define mod_FUNCTION '%'
+#define UNARY_PLUS 'p'
+#define UNARY_MINUS 'm'
+
 #define OPERAND 0
 #define OPERATOR 1
 #define UNARYOPERATOR 2
@@ -8,6 +25,7 @@
 #define L_BRACKET 4
 #define R_BRACKET 5
 #define FUNCTION 6
+#define ERROR 7
 
 #define ADD_SCORE 2
 #define SUB_SCORE 2
