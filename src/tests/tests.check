@@ -6,6 +6,10 @@
 #include <math.h>
 #include <stdlib.h>
 
+/*
+ * LIST TESTS
+ */
+
 #test ll_list_1
 struct ll_node *l = ll_node_new(1, 2.2);
 uint expected_result, actual_result;
@@ -71,13 +75,77 @@ ck_assert_ptr_eq(ll_before_last_node(l)->next, ll_last_node(l));
 ll_destroy_list(l);
 
 /*
-void ll_node_destroy(struct ll_node **n);
-struct ll_node *ll_node_prepend(struct ll_node *n, const unsigned int s,
-                                const double d);
-void ll_node_append(struct ll_node *n, const unsigned int s, const double d);
-int ll_print(const struct ll_node *n);
-struct ll_node *ll_remove_node(struct ll_node *n, struct ll_node *root);
-void ll_destroy_list(struct ll_node *root);
-struct ll_node *ll_last_node(struct ll_node *n);
-struct ll_node *ll_before_last_node(struct ll_node *n);
+ * STACK TESTS
+ *
+struct stk *stk_new(void);
+void stk_destroy(struct stk **k);
+void stk_push(struct stk *k, const unsigned int s, const double d);
+void stk_pop(struct stk *k);
+double stk_peek(const struct stk *k);
+int stk_peek_status(const struct stk *k);
+*/
+
+#test stack_1
+struct stk *s = stk_new();
+uint expected_result, actual_result;
+expected_result = 0;
+actual_result = s->depth;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_eq(s->top, NULL);
+stk_destroy(&s);
+
+#test stack_2
+struct stk *s = stk_new();
+uint expected_result, actual_result;
+stk_push(s, 7, -5.45);
+expected_result = 1;
+actual_result = s->depth;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_ne(s->top, NULL);
+stk_destroy(&s);
+
+#test stack_3
+struct stk *s = stk_new();
+uint expected_result, actual_result;
+stk_push(s, 7, -5.45);
+stk_pop(s);
+expected_result = 0;
+actual_result = s->depth;
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_eq(s->top, NULL);
+stk_destroy(&s);
+
+#test stack_4
+struct stk *s = stk_new();
+uint expected_result, actual_result;
+stk_push(s, 7, -5.45);
+expected_result = 7;
+actual_result = stk_peek_status(s);
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_ne(s->top, NULL);
+stk_destroy(&s);
+
+#test stack_5
+struct stk *s = stk_new();
+uint expected_result, actual_result;
+stk_push(s, 7, -5.45);
+expected_result = 7;
+actual_result = stk_peek_status(s);
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_ptr_ne(s->top, NULL);
+ck_assert(fabs(-5.45 - stk_peek(s)) < EPS);
+stk_destroy(&s);
+
+/*
+ * EXPR TESTS
+ *
+struct expr *expr_new(void);
+void expr_destroy(struct expr **e);
+void expr_add_symbol(struct expr *e, const unsigned int s, const double d);
+void expr_print(const struct expr *e);
+struct expr *expr_shunt(const struct expr *e);
+struct expr *expr_from_array(const char *a);
+char *one_expr_from_string(char *prog, struct expr **infix_to_fill, int *good,
+                           int *parents);
+struct expr *expr_from_string(char *a, int *good);
 */
