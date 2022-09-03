@@ -142,39 +142,7 @@ struct expr *expr_shunt(const struct expr *infix) {
   stk_destroy(&opstack);
   return rpn;
 }
-/*
-struct expr *expr_shunt_old(const struct expr *infix) {
-  struct stk *opstack = stk_new();
-  struct expr *rpn = expr_new();
-  for (struct ll_node *i = infix->head; i != NULL; i = i->next) {
-    if (i->state == OPERAND) {  // Если это число
-      expr_add_symbol(rpn, OPERAND, i->datum);
-    } else if (i->state == VARIABLE) {  // Если это переменная
-      expr_add_symbol(rpn, VARIABLE, i->datum);
-    } else if ((i->state == L_BRACKET)) {  // Если это скобка открылась
-      stk_push(opstack, OPERATOR, i->datum);
-    } else if ((i->state == R_BRACKET)) {  // Если скобка закрылась
-      while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
-      stk_pop(opstack);  // Забираем из стека открывающуюся скобку
-      if (stk_peek_status(opstack) == FUNCTION) stack_to_expr(rpn, opstack);
-    } else if ((i->state == FUNCTION)) {  // Если это функция
-      stk_push(opstack, i->state, i->datum);
-    } else if (i->state == ERROR) {
-      i = NULL;
-    } else {  // Если это оператор
-      while ((opstack->depth > 0) &&
-             ((precedence(opstack->top) > precedence(i)) ||
-              ((precedence(opstack->top) == precedence(i)))) &&
-             (stk_peek(opstack) != '('))
-        stack_to_expr(rpn, opstack);
-      stk_push(opstack, i->state, i->datum);
-    }
-  }
-  while (opstack->depth > 0) stack_to_expr(rpn, opstack);
-  stk_destroy(&opstack);
-  return rpn;
-}
-*/
+
 double get_operand(const char *a) {
   double d;
   sscanf(a, "%lg", &d);
@@ -190,9 +158,6 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
     src_str += 3;
   } else if (strncmp(src_str, "tan(", 4) == 0) {
     expr_add_symbol(infix, FUNCTION, tan_FUNCTION);
-    src_str += 3;
-  } else if (strncmp(src_str, "ctg(", 4) == 0) {
-    expr_add_symbol(infix, FUNCTION, ctg_FUNCTION);
     src_str += 3;
   } else if (strncmp(src_str, "abs(", 4) == 0) {
     expr_add_symbol(infix, FUNCTION, abs_FUNCTION);

@@ -57,9 +57,6 @@ double rpn_reduce(const struct expr *e, double x) {
         case tan_FUNCTION:
           stk_push(k, OPERAND, tan(a));
           break;
-        case ctg_FUNCTION:
-          stk_push(k, OPERAND, tan(3.14 / 2 - a));
-          break;
         case sqrt_FUNCTION:
           stk_push(k, OPERAND, sqrt(a));
           break;
@@ -82,11 +79,8 @@ double rpn_reduce(const struct expr *e, double x) {
           stk_push(k, OPERAND, fabs(a));
           break;
         case ERROR:
-          assert(0);
-          break;
         default:
-          stk_push(k, OPERAND, a);
-          // assert(0);
+          assert(0);
           break;
       }
     }

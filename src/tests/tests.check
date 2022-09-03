@@ -3,7 +3,7 @@
 #include "../rpr/expr.h"
 #include "../rpr/llist.h"
 #include "../rpr/stack.h"
-#define EPS 1e-9
+#define EPS 1e-7
 #define MIN_X -1000000
 #define MAX_X 1000000
 #include <float.h>
@@ -244,7 +244,7 @@ expr_destroy(&r);
 #test expr_wrong_formula
 char str[12][1000] = {
     "sinus(X)",
-    "sin(eX)",
+    "sin(eX) ",
     "sinus(cosinus(x^^2)^^^^(++1-*-100))*x(         )*tangens(X)+sqrt("
     "-x/2)-log(x mod 2)",
     "",
@@ -342,7 +342,7 @@ expr_destroy(&e);
 char str[13][1000] = {
     "sin(X)",
     "cos(X)",
-    "(6 + 4)*cos(3*x) + (4 - 6)*sin(3*x) + x*((-5)*sin(3*x) + (12 - "
+    "(6 + 4)*cos(3*x) + (4 - 6)*sin(3*x) + x*((-5)*sin(+3*x) + (12 - "
     "5)*cos(3*x)) + (25*sin(3*x) + 25*cos(X)) ",
     "(-x/2)-log(x mod 2)",
     "x",
@@ -352,16 +352,15 @@ char str[13][1000] = {
     "cos(-x)",
     "2 mod 3",
     "-2 mod -4",
-    "sin(x)-cos(x)",
+    "sin(x)-+cos(+x)",
     "-(-X)"};
 
 struct expr *e, *r;
-uint expected_result[13] = {4, 4, 72, 13, 1, 9, 7, 3, 5, 3, 5, 9, 5},
+uint expected_result[13] = {4, 4, 73, 13, 1, 9, 7, 3, 5, 3, 5, 11, 5},
      actual_result;
 int res = 1;
 D("%s", "expr_shunt_right_formula\n");
 for (int i = 0; i < 13; i++) {
-  //  if (i == 1 || i == 2) continue;
   D("%d\n", i);
   e = expr_from_string(str[i], &res);
   actual_result = e->length;
@@ -403,8 +402,7 @@ for (int i = 0; i < 10; i++) {
   expr_destroy(&r);
 }
 
-/*
-// #test core_random_expressions
+#test core_random_expressions
 double ex1(double x) {
   return sin(pow(cos(pow(x, 2)), (1 * -100))) * x * tan(x) + sqrt(x / 2) -
          log(fmod(x, 2));
@@ -421,21 +419,35 @@ double ex5(double x) {
          x * ((-5) * sin(3 * x) + (12 - 5) * cos(3 * x)) +
          (25 * sin(3 * x) + 25 * cos(x));
 }
+double ex6(double x) { return 3 * pow(x, 2) + 1.5 * x + -.5; }
+double ex7(double x) { return pow(sin(x / 2), 2) - (1 - cos(x)) / 2; }
+double ex8(double x) { return sin(2 * x) / (1 + cos(2 * x)); }
+double ex9(double x) {
+  return sin(x) + cos(x) -
+         fmod(tan(x) * log10(x) / pow(log(x), atan(x)),
+              asin(x) / acos(x) * sqrt(x)) +
+         fabs(x);
+}
+double ex10(double x) {
+  return 3.14 * pow(sin(x), 2) + 3.14 / 2 * sin(x) * cos(x) +
+         3.14 / 4 * pow(cos(x), 2);
+}
 char str[10][1000] = {
-    "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(x/2)-log(x mod 2)",
+    "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(+x/2)-log(x mod 2)",
     "sin(cos(x^2)^(1*-100))*x",
     "tan(x)^(abs(x))/asin(x^-1)+3.14*ln(x-x/2)",
     "x+1-x+(x+(x-x/2)-x*0.01-x*2)",
     "(6 + 4)*cos(3*x) + (4 - 6)*sin(3*x) + x*((-5)*sin(3*x) + (12 - "
     "5)*cos(3*x)) + (25*sin(3*x) + 25*cos(X)) ",
-    "atan(x)",
-    "asin(x)",
-    "acos(x)",
-    "sqrt(x)",
-    "abs(x)"};
+    "3*x^2+1.5*x+-.5",
+    "sin(x/2)^2-(1-cos(x))/2",
+    "sin(2*x)/(1+cos(2*x))",
+    "sin(x)+cos(x)-tan(x)*log(x)/ln(x)^atan(x) mod "
+    "asin(x)/acos(x)*sqrt(x)+abs(x)",
+    " 3.14*sin(x)^2+3.14/2*sin(x)*cos(x)+3.14/4*cos(+x)^2"};
 typedef double (*f_ptr)(double x);
 f_ptr functions[10] = {
-    ex1, ex2, ex3, ex4, ex5, atan, asin, acos, sqrt, fabs,
+    ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10,
 };
 struct expr *e, *r;
 double expected_result, actual_result;
@@ -451,11 +463,10 @@ for (int i = 0; i < 10; i++) {
     if (!isnan(actual_result) && !isnan(expected_result) &&
         !isinf(expected_result) && !isinf(actual_result)) {
       if (fabs(expected_result - actual_result) > EPS)
-        D("e:%f a:%f\n", expected_result, actual_result);
+        D("e:%.7f a:%.7f\n", expected_result, actual_result);
       ck_assert(fabs(expected_result - actual_result) < EPS);
     }
   }
   expr_destroy(&r);
   expr_destroy(&e);
 }
-*/

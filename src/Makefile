@@ -88,7 +88,7 @@ gcov_report: clean $(TEST_C)
 	ar rc lib$(LIB).a *.o
 	$(CC) $(CCOPTS) $(TEST_C) -L./ -l$(LIB) $(LIBS) -lgcov -o $(TEST_APP)
 	$(CLEAN) $(OBJ)
-	-CK_TIMEOUT_MULTIPLIER=2 ./$(TEST_APP)
+	-CK_TIMEOUT_MULTIPLIER=5 ./$(TEST_APP)
 	gcov *.gcda
 	lcov -t "gcov_report" -o gcov_report.info -c -d .
 	[ -d $(ROOT)/src/report ] || mkdir $(ROOT)/src/report
