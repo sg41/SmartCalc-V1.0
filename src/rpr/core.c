@@ -81,8 +81,12 @@ double rpn_reduce(const struct expr *e, double x) {
         case abs_FUNCTION:
           stk_push(k, OPERAND, fabs(a));
           break;
-        default:
+        case ERROR:
           assert(0);
+          break;
+        default:
+          stk_push(k, OPERAND, a);
+          // assert(0);
           break;
       }
     }

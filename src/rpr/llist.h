@@ -3,6 +3,8 @@
 
 #include <assert.h>
 
+#include "expr.h"
+
 struct ll_node {
   unsigned int state;
   double datum;

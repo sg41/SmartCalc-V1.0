@@ -55,7 +55,7 @@ $(TEST_C): tests/*.check
 
 test: $(TEST_C) $(LIB)
 	$(CC) $(CCOPTS) $(TEST_C) -o test.app $(LDOPTS) $(LIBS) -l$(LIB)
-	-CK_TIMEOUT_MULTIPLIER=2 ./$(TEST_APP)
+	-CK_TIMEOUT_MULTIPLIER=5 ./$(TEST_APP)
 
 check: $(SOURCES) graph.c $(HEADERS) graph.h
 	cp $(ROOT)/materials/linters/.clang-format ./

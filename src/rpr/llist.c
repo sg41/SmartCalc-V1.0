@@ -83,3 +83,34 @@ struct ll_node *ll_before_last_node(struct ll_node *n) {
   }
   return b;
 }
+
+#define DEBUG 1
+int ll_print(const struct ll_node *n) {
+  char txt[8][20] = {"OPERAND",   "OPERATOR",  "UNARYOPERATOR", "VARIABLE",
+                     "L_BRACKET", "R_BRACKET", "FUNCTION",      "ERROR"};
+
+  int m = 0;
+  assert(n != NULL);
+  if (DEBUG) {
+    for (; n != NULL; n = n->next) {
+      if (n->state == OPERAND) {
+        printf("@%p\tOPERAND\t%f\n", n, n->datum);
+      } else {
+        printf("@%p\t%s\t%c\t%d\n", n, txt[(int)n->state], (char)n->datum,
+               (int)n->state);
+      }
+      m++;
+    }
+  } else {
+    for (; n != NULL; n = n->next) {
+      if (n->state == OPERAND) {
+        printf("%f ", n->datum);
+      } else {
+        printf("%c, %d ", (char)n->datum, (int)n->state);
+      }
+      m++;
+    }
+    printf("\n");
+  }
+  return m;
+}

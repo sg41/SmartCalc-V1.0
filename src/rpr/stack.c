@@ -13,7 +13,8 @@ struct stk *stk_new(void) {
 }
 
 void stk_destroy(struct stk **k) {
-  if ((*k)->top != NULL) ll_destroy_list((*k)->top);
+  if (k && *k && (*k)->depth > 0 && (*k)->top != NULL)
+    ll_destroy_list((*k)->top);
   free(*k);
 }
 
@@ -35,12 +36,16 @@ void stk_pop(struct stk *k) {
       ll_node_destroy(&(k->top));
       k->top = tmp;
       (k->depth)--;
+    } else {
+      assert(0);
     }
   }
 }
 
 int stk_peek_status(const struct stk *k) {
-  return (k != NULL) ? k->top->state : 0;
+  return (k != NULL && k->depth > 0) ? k->top->state : 0;
 }
 
-double stk_peek(const struct stk *k) { return (k != NULL) ? k->top->datum : 0; }
+double stk_peek(const struct stk *k) {
+  return (k != NULL && k->depth > 0) ? k->top->datum : 0;
+}

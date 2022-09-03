@@ -13,6 +13,7 @@
 #define asin_FUNCTION 'i'
 #define acos_FUNCTION 'o'
 #define atan_FUNCTION 'n'
+#define error_FUNCTION 'E'
 // Operators:
 #define mod_FUNCTION '%'
 #define UNARY_PLUS 'p'
@@ -31,8 +32,8 @@
 #define SUB_SCORE 2
 #define MULT_SCORE 4
 #define DIV_SCORE 4
-#define FUNC_SCORE 4
-#define EXP_SCORE 4
+#define FUNC_SCORE 10
+#define EXP_SCORE 6
 #define U_SCORE 10
 #define L_SCORE 12
 #define R_SCORE 12

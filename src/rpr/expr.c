@@ -7,15 +7,20 @@
 #include "stack.h"
 
 /* Возвращает значение ИСТИНА, если с является оператором. */
-int is_oper(char c) { return (strchr("+-/*%^()", c)) ? 1 : 0; }
+int is_oper(char c) {
+  int res = 0;
+  if (c != 0 && strchr("+-/*%^()", c)) res = 1;
+  return res;
+}
 
-/* Возвращает значение ИСТИНА, если с является раздилителем. */
+/* Возвращает значение ИСТИНА, если с является раздилителем, в том числе 0 */
 int is_space(char c) { return (strchr(" \t\n\r", c)) ? 1 : 0; }
 
-//*! проверить на ошибки! Возвращает значение ИСТИНА, если с является цифрой или
+/*Возвращает значение ИСТИНА, если с является цифрой или
 //точкой */
 int is_digit(char c) {
-  return (c >= '0' && c <= '9') || c == '.' || c == '-' || c == 'e' || c == 'E';
+  return (c >= '0' && c <= '9') ||
+         c == '.';  //|| c == '-' || c == 'e' || c == 'E';
 }
 
 /* Возвращает значение ИСТИНА, если с является буквой */
@@ -105,6 +110,43 @@ struct expr *expr_shunt(const struct expr *infix) {
   struct stk *opstack = stk_new();
   struct expr *rpn = expr_new();
   for (struct ll_node *i = infix->head; i != NULL; i = i->next) {
+    switch (i->state) {
+      case OPERAND:
+      case VARIABLE:
+        expr_add_symbol(rpn, i->state, i->datum);
+        break;
+      case FUNCTION:
+      case L_BRACKET:
+        stk_push(opstack, i->state, i->datum);
+        break;
+      case R_BRACKET:
+        while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
+        stk_pop(opstack);  // Забираем из стека открывающуюся скобку
+        if (stk_peek_status(opstack) == FUNCTION) stack_to_expr(rpn, opstack);
+        break;
+      case UNARYOPERATOR:
+      case OPERATOR:
+        while (opstack->depth > 0 &&
+               precedence(opstack->top) >= precedence(i) &&
+               stk_peek(opstack) != '(')
+          stack_to_expr(rpn, opstack);
+        stk_push(opstack, i->state, i->datum);
+        break;
+      case ERROR:
+      default:
+        i = NULL;
+        assert(0);
+    }
+  }
+  while (opstack->depth > 0) stack_to_expr(rpn, opstack);
+  stk_destroy(&opstack);
+  return rpn;
+}
+/*
+struct expr *expr_shunt_old(const struct expr *infix) {
+  struct stk *opstack = stk_new();
+  struct expr *rpn = expr_new();
+  for (struct ll_node *i = infix->head; i != NULL; i = i->next) {
     if (i->state == OPERAND) {  // Если это число
       expr_add_symbol(rpn, OPERAND, i->datum);
     } else if (i->state == VARIABLE) {  // Если это переменная
@@ -132,7 +174,7 @@ struct expr *expr_shunt(const struct expr *infix) {
   stk_destroy(&opstack);
   return rpn;
 }
-
+*/
 double get_operand(const char *a) {
   double d;
   sscanf(a, "%lg", &d);
@@ -183,7 +225,7 @@ char *expr_add_function(struct expr *infix, char *src_str, int *good) {
     while (is_alpha(*src_str)) {
       src_str++;
     }
-    expr_add_symbol(infix, ERROR, '\0');
+    expr_add_symbol(infix, ERROR, 'E');
     *good = 0;
   }
   return src_str;
@@ -194,40 +236,48 @@ void make_unary_operator(struct ll_node *s) {
   s->datum = (s->datum == '+') ? 'p' : 'm';
 }
 
+int check_syntax(struct ll_node *last, struct ll_node *before) {
+  int good = 1;
+  if (last->state == ERROR) good = 0;
+  if (before->state == UNARYOPERATOR &&
+      (last->state == OPERATOR || last->state == R_BRACKET))
+    good = 0;
+
+  if (last->state == before->state && last->state != L_BRACKET &&
+      last->state != R_BRACKET)
+    good = 0;
+
+  if (before->state == OPERATOR && last->state == R_BRACKET) good = 0;
+
+  return good;
+}
+
 struct expr *expr_from_string(char *a, int *good) {
   char *p = a;
   struct expr *infix = NULL;
   int parents = 0;
   *good = 1;
   if (p && *p) {
-    p = one_expr_from_string(p, &infix, good, &parents);
+    p = one_expr_from_string(p, &infix, good, &parents);  // First symbol
     struct ll_node *last = infix->head;
     if (last->datum == '-' || last->datum == '+') make_unary_operator(last);
     if (infix->head->state == OPERATOR) {
       *good = 0;
     } else {
-      while (*p && *good) {
+      while (*p && *good) {  // Rest of the string
         p = one_expr_from_string(p, &infix, good, &parents);
         struct ll_node *before;
         last = ll_last_node(infix->head);
         before = ll_before_last_node(infix->head);
         if ((last->datum == '-' || last->datum == '+') &&
-            before->state != OPERAND)
+            ((before->state == OPERATOR) || (before->state == L_BRACKET)))
           make_unary_operator(last);
-        if (before->state == UNARYOPERATOR &&
-            (last->state == OPERATOR || last->state == R_BRACKET ||
-             last->state == L_BRACKET)) {
-          *good = 0;
-        }
-        if (last->state == before->state && last->state != L_BRACKET &&
-            last->state != R_BRACKET) {
-          *good = 0;
-        }
+        *good = check_syntax(last, before);
       }
     }
   } else {
     infix = expr_new();
-    expr_add_symbol(infix, ERROR, '\0');
+    expr_add_symbol(infix, ERROR, 'E');
     *good = 0;
   }
   if (parents != 0) *good = 0;
@@ -253,7 +303,12 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
         expr_add_symbol(infix, L_BRACKET, *src_str);
       } else if (*src_str == ')') {  // right bracket
         (*parents)--;
-        expr_add_symbol(infix, R_BRACKET, *src_str);
+        if ((*parents) >= 0) {
+          expr_add_symbol(infix, R_BRACKET, *src_str);
+        } else {  // Right bracket with no left
+          expr_add_symbol(infix, ERROR, 'E');
+          *good = 0;
+        }
       } else {  // Any other operator
         expr_add_symbol(infix, OPERATOR, *src_str);
       }
@@ -265,10 +320,12 @@ char *one_expr_from_string(char *str, struct expr **infix_to_fill, int *good,
       while (*src_str && is_digit(*src_str)) {
         src_str++;
       }
-    } else {
-      expr_add_symbol(infix, ERROR, '\0');
-      *good = 0;
-      src_str++;
+    } else {                     // EOL
+      if (infix->length == 0) {  // If meet EOL and expr is empty
+        expr_add_symbol(infix, ERROR, 'E');
+        *good = 0;
+      }
+      if (*src_str != 0) src_str++;
     }
   }
   *infix_to_fill = infix;
