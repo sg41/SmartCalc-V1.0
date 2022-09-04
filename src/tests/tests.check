@@ -432,7 +432,10 @@ double ex10(double x) {
   return 3.14 * pow(sin(x), 2) + 3.14 / 2 * sin(x) * cos(x) +
          3.14 / 4 * pow(cos(x), 2);
 }
-char str[10][1000] = {
+double ex11(double x) {
+  return 13 * cos(x) - 5 * cos(2 * x) - 2 * cos(3 * x) - cos(4 * x);
+}
+char str[11][1000] = {
     "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(+x/2)-log(x mod 2)",
     "sin(cos(x^2)^(1*-100))*x",
     "tan(x)^(abs(x))/asin(x^-1)+3.14*ln(x-x/2)",
@@ -444,15 +447,14 @@ char str[10][1000] = {
     "sin(2*x)/(1+cos(2*x))",
     "sin(x)+cos(x)-tan(x)*log(x)/ln(x)^atan(x) mod "
     "asin(x)/acos(x)*sqrt(x)+abs(x)",
-    " 3.14*sin(x)^2+3.14/2*sin(x)*cos(x)+3.14/4*cos(+x)^2"};
+    " 3.14*sin(x)^2+3.14/2*sin(x)*cos(x)+3.14/4*cos(+x)^2",
+    "13*cos(x)-5*cos(2*x)-2*cos(3*x)-cos(4*x)"};
 typedef double (*f_ptr)(double x);
-f_ptr functions[10] = {
-    ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10,
-};
+f_ptr functions[11] = {ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex11};
 struct expr *e, *r;
 double expected_result, actual_result;
 int good = 0;
-for (int i = 0; i < 10; i++) {
+for (int i = 0; i < 11; i++) {
   D("i:%d func:%s\n", i, str[i]);
   e = expr_from_string(str[i], &good);
   r = expr_shunt(e);
