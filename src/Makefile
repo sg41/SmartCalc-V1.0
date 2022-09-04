@@ -1,9 +1,11 @@
 LDOPTS = -L. -lm -lcheck
 CCOPTS = -Wall -Werror -Wextra -DNDEBUG
-CC=gcc
-APP_ARGS="sin(cos(x^2)^(1*-100))*x"
-TEST_APP=test.app
-TEST_C=tests/test.c
+GTK_OPTS = `pkg-config --cflags gtk+-3.0`
+GTK_LIBS = `pkg-config --libs gtk+-3.0`
+CC = gcc
+APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
+TEST_APP = test.app
+TEST_C = tests/test.c
 
 ROOT := $(shell git rev-parse --show-toplevel)
 GCOV=-fprofile-arcs -ftest-coverage
@@ -27,6 +29,9 @@ all:  graph
 
 $(LIB): $(OBJECTS)
 	ar rcs lib$(LIB).a $(OBJECTS)
+
+gtk: gtk.c	
+	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) $(LIBS) -l$(LIB) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
 	[ -d ../build ] || mkdir ../build
