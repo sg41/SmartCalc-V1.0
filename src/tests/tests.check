@@ -242,7 +242,7 @@ expr_destroy(&e);
 expr_destroy(&r);
 
 #test expr_wrong_formula
-char str[12][1000] = {
+char str[13][1000] = {
     "sinus(X)",
     "sin(eX) ",
     "sinus(cosinus(x^^2)^^^^(++1-*-100))*x(         )*tangens(X)+sqrt("
@@ -255,14 +255,16 @@ char str[12][1000] = {
     "2 modulus 3",
     "2 -mod 4",
     "sin)x(",
-    ")X("};
+    ")X(",
+    " "};
 
 struct expr *e;
-uint expected_result[12] = {1, 3, 1, 1, 1, 2, 1, 6, 3, 3, 1, 1}, actual_result;
+uint expected_result[13] = {1, 3, 1, 1, 1, 2, 1, 6, 3, 3, 1, 1, 1},
+     actual_result;
 int res = 0;
 // expected_result[1] = 3;
 // expected_result[5] = 2;
-for (int i = 0; i < 12; i++) {
+for (int i = 0; i < 13; i++) {
   D("%d\n", i);
   e = expr_from_string(str[i], &res);
   actual_result = e->length;

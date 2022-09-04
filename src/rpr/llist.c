@@ -86,12 +86,11 @@ struct ll_node *ll_before_last_node(struct ll_node *n) {
 
 #define DEBUG 1
 int ll_print(const struct ll_node *n) {
-  char txt[8][20] = {"OPERAND",   "OPERATOR",  "UNARYOPERATOR", "VARIABLE",
-                     "L_BRACKET", "R_BRACKET", "FUNCTION",      "ERROR"};
-
   int m = 0;
   assert(n != NULL);
   if (DEBUG) {
+    char txt[8][20] = {"OPERAND",   "OPERATOR",  "UNARYOPERATOR", "VARIABLE",
+                       "L_BRACKET", "R_BRACKET", "FUNCTION",      "ERROR"};
     for (; n != NULL; n = n->next) {
       if (n->state == OPERAND) {
         printf("@%p\tOPERAND\t%f\n", n, n->datum);
