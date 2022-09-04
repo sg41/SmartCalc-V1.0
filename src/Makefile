@@ -53,7 +53,7 @@ $(TEST_C): tests/*.check
 	checkmk tests/*.check > $(TEST_C)
 
 test: $(TEST_C) $(LIB)
-	$(CC) $(CCOPTS) $(TEST_C) -o test.app $(LDOPTS) $(LIBS) -l$(LIB)
+	$(CC) $(CCOPTS) $(TEST_C) -o $(TEST_APP) $(LDOPTS) $(LIBS) -l$(LIB)
 	-CK_TIMEOUT_MULTIPLIER=5 ./$(TEST_APP)
 
 check: $(SOURCES) graph.c $(HEADERS) graph.h
@@ -86,7 +86,6 @@ gcov_report: clean $(TEST_C)
 	$(CC) $(CCOPTS) --coverage -c $(SOURCES)
 	ar rc lib$(LIB).a *.o
 	$(CC) $(CCOPTS) $(TEST_C) -L./ -l$(LIB) $(LIBS) -lgcov -o $(TEST_APP)
-	$(CLEAN) $(OBJ)
 	-CK_TIMEOUT_MULTIPLIER=5 ./$(TEST_APP)
 	gcov *.gcda
 	lcov -t "gcov_report" -o gcov_report.info -c -d .
