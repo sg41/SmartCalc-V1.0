@@ -1,6 +1,5 @@
 LDOPTS = -L. -lm -lcheck
-CCOPTS = -Wall -Werror -Wextra 
-#-DNDEBUG
+CCOPTS = -Wall -Werror -Wextra -DNDEBUG
 CC=gcc
 APP_ARGS="sin(cos(x^2)^(1*-100))*x"
 TEST_APP=test.app

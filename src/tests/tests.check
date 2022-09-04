@@ -186,12 +186,14 @@ expr_destroy(&e);
 #test expr_3
 struct expr *e = expr_new();
 uint expected_result, actual_result;
-expr_add_symbol(e, 77, DBL_MAX);
-expected_result = 1;
+for (int i = 0; i < 10000; i++) {
+  expr_add_symbol(e, i, DBL_MAX);
+}
+expected_result = 10000;
 actual_result = e->length;
 ck_assert_ptr_ne(e->head, NULL);
 ck_assert_uint_eq(expected_result, actual_result);
-ck_assert_uint_eq(e->head->state, 77);
+ck_assert_uint_eq(e->head->state, 0);
 ck_assert(fabs(DBL_MAX - e->head->datum) < EPS);
 expr_destroy(&e);
 
