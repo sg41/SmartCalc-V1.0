@@ -269,6 +269,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">3</property>
@@ -281,6 +282,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -319,6 +321,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">5</property>
@@ -331,6 +334,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">3</property>
@@ -343,6 +347,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -355,6 +360,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">5</property>
@@ -367,6 +373,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">5</property>
@@ -379,6 +386,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">6</property>
@@ -391,6 +399,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">6</property>
@@ -403,6 +412,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">6</property>
@@ -427,6 +437,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">6</property>
@@ -439,6 +450,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -463,6 +475,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">3</property>
@@ -475,6 +488,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">3</property>
@@ -487,6 +501,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">4</property>
@@ -499,6 +514,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">5</property>
@@ -550,6 +566,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="func_button_clicked" object="src_str_entry" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>
