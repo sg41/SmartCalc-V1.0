@@ -7,16 +7,22 @@
 
 extern void func_button_clicked(GtkButton *button, gpointer data) {
   GtkEntry *src_str_entry = data;
+  int cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
   const char *func_name = gtk_button_get_label(button);
   const char *src_str = gtk_entry_get_text(src_str_entry);
   char new_str[MAXSTR] = {0};
+  // sprintf(new_str, "%d", cur_pos);
+  if (cur_pos == 0 || cur_pos == -1) cur_pos = strlen(src_str);
   if (is_alpha(*func_name) && *func_name != 'X' && *func_name != 'm' &&
       *func_name != '^') {
-    sprintf(new_str, "%s%s%s", src_str, func_name, "(");
+    sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
+            src_str + cur_pos);
   } else if (*func_name == 'm') {
-    sprintf(new_str, "%s %s ", src_str, func_name);
+    sprintf(new_str, "%.*s %s %s", cur_pos, src_str, func_name,
+            src_str + cur_pos);
   } else {
-    sprintf(new_str, "%s%s", src_str, func_name);
+    sprintf(new_str, "%.*s%s%s", cur_pos, src_str, func_name,
+            src_str + cur_pos);
   }
   gtk_entry_set_text(src_str_entry, new_str);
 }
