@@ -53,5 +53,7 @@ char *one_expr_from_string(char *prog, struct expr **infix_to_fill, int *good,
                            int *parents);
 struct expr *expr_from_string(char *a, int *good);
 int is_alpha(char c);
+int is_digit(char c);
+int is_space(char c);
 
 #endif  // SRC_RPR_EXPR_H_

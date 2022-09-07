@@ -31,7 +31,7 @@ $(LIB): $(OBJECTS)
 	ar rcs lib$(LIB).a $(OBJECTS)
 
 gtk: gtk.c	$(LIB)
-	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) $(LIBS) -l$(LIB) $(GTK_LIBS)
+	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) -l$(LIB) $(LIBS) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
 	[ -d ../build ] || mkdir ../build
