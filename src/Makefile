@@ -1,6 +1,6 @@
 LDOPTS = -L. -lm -lcheck
 CCOPTS = -Wall -Werror -Wextra -DNDEBUG
-GTK_OPTS = `pkg-config --cflags gtk+-3.0`
+GTK_OPTS = -rdynamic `pkg-config --cflags gtk+-3.0`
 GTK_LIBS = `pkg-config --libs gtk+-3.0`
 CC = gcc
 APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
@@ -30,7 +30,7 @@ all:  graph
 $(LIB): $(OBJECTS)
 	ar rcs lib$(LIB).a $(OBJECTS)
 
-gtk: gtk.c	
+gtk: gtk.c	$(LIB)
 	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) $(LIBS) -l$(LIB) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
@@ -77,7 +77,7 @@ check2: $(SOURCES) graph.c $(HEADERS) graph.h
 
 clean:
 	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(OBJECTS:.o=.h.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C)
-	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format
+	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format *.app
 
 rebuild: clean all
 
