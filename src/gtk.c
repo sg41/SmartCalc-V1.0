@@ -38,7 +38,6 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
       sprintf(new_str, "%.*s%s(%.*s)%s", new_pos, src_str, func_name,
               cur_pos - new_pos, src_str + new_pos, src_str + cur_pos);
       new_pos += 2;  // 2 Bracets around selection
-      // new_pos = cur_pos + 2;
     } else {
       sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
               src_str + cur_pos);
@@ -50,6 +49,16 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
     sprintf(new_str, "%.*s %s %s", cur_pos, src_str, func_name,
             src_str + cur_pos);
     new_pos += 2;  // 2 spaces around func name
+  } else if (*func_name == '(') {
+    if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry,
+                                          &new_pos, &cur_pos) != FALSE) {
+      sprintf(new_str, "%.*s(%.*s)%s", new_pos, src_str, cur_pos - new_pos,
+              src_str + new_pos, src_str + cur_pos);
+      new_pos += 2;  // 2 Bracets around selection
+    } else {
+      sprintf(new_str, "%.*s%s%s", cur_pos, src_str, func_name,
+              src_str + cur_pos);
+    }
   } else {
     gtk_editable_delete_selection((GtkEditable *)src_str_entry);
     cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
