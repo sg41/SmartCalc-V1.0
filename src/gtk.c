@@ -5,30 +5,79 @@
 #include "rpr/core.h"
 #include "rpr/expr.h"
 
+int cut_selection(gpointer data) {
+  GtkEntry *src_str_entry = data;
+  const char *src_str = gtk_entry_get_text(src_str_entry);
+  char new_str[MAXSTR] = {0};
+  int cur_pos = 0;
+  int new_pos = 0;
+  int res = 0;
+
+  if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry, &new_pos,
+                                        &cur_pos) != FALSE) {
+    sprintf(new_str, "%.*s%s", new_pos, src_str, src_str + cur_pos);
+    gtk_entry_set_text(src_str_entry, new_str);
+    gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
+    res = cur_pos - new_pos;
+  }
+
+  return res;
+}
+
 extern void func_button_clicked(GtkButton *button, gpointer data) {
   GtkEntry *src_str_entry = data;
   int cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
   const char *func_name = gtk_button_get_label(button);
   const char *src_str = gtk_entry_get_text(src_str_entry);
   char new_str[MAXSTR] = {0};
-  // sprintf(new_str, "%d", cur_pos);
-  int new_pos = cur_pos + strlen(func_name);
-  // if (cur_pos == 0) cur_pos = strlen(src_str);
+  int new_pos = 0;  // cur_pos + strlen(func_name);
   if (is_alpha(*func_name) && *func_name != 'X' && *func_name != 'm' &&
       *func_name != '^') {
-    sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
-            src_str + cur_pos);
-    new_pos += 1;  // Bracket behind func name
+    if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry,
+                                          &new_pos, &cur_pos) != FALSE) {
+      sprintf(new_str, "%.*s%s(%.*s)%s", new_pos, src_str, func_name,
+              cur_pos - new_pos, src_str + new_pos, src_str + cur_pos);
+      new_pos += 2;  // 2 Bracets around selection
+      // new_pos = cur_pos + 2;
+    } else {
+      sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
+              src_str + cur_pos);
+      new_pos += 1;  // Bracket behind func name
+    }
   } else if (*func_name == 'm') {
+    gtk_editable_delete_selection((GtkEditable *)src_str_entry);
+    cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
     sprintf(new_str, "%.*s %s %s", cur_pos, src_str, func_name,
             src_str + cur_pos);
     new_pos += 2;  // 2 spaces around func name
   } else {
+    gtk_editable_delete_selection((GtkEditable *)src_str_entry);
+    cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
+
     sprintf(new_str, "%.*s%s%s", cur_pos, src_str, func_name,
             src_str + cur_pos);
   }
+  new_pos += cur_pos + strlen(func_name);
   gtk_entry_set_text(src_str_entry, new_str);
   gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
+}
+
+extern void backspace_clicked(GtkButton *button, gpointer data) {
+  GtkEntry *src_str_entry = data;
+  const char *src_str = gtk_entry_get_text(src_str_entry);
+  char new_str[MAXSTR] = {0};
+  int cur_pos;
+  int new_pos;
+  if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry, &new_pos,
+                                        &cur_pos) == FALSE) {
+    cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
+    new_pos = cur_pos - 1;
+  }
+  if (new_pos >= 0) {
+    sprintf(new_str, "%.*s%s", new_pos, src_str, src_str + cur_pos);
+    gtk_entry_set_text(src_str_entry, new_str);
+    gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
+  }
 }
 
 typedef struct {
@@ -159,7 +208,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v1.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v2.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
