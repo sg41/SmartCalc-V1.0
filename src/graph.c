@@ -31,7 +31,7 @@ int txt_main(int argc, char *argv[]) {
     infix = expr_from_string(string, &good);
     if (good) {
       postfix = expr_shunt(infix);
-      draw_graph(rpn_reduce, postfix);
+      draw_txt_graph(rpn_reduce, postfix);
       expr_destroy(&postfix);
     }
     expr_destroy(&infix);
@@ -65,7 +65,8 @@ int input(char *s) {
   return strlen(s);
 }
 
-int draw_graph(double (*calc)(struct expr *, double), struct expr *postfix) {
+int draw_txt_graph(double (*calc)(struct expr *, double),
+                   struct expr *postfix) {
   double scalex = (double)(MAXX - MINX) / MAXI;
   double scaley = (double)MAXJ / (MAXY - MINY);
   int i, j;
