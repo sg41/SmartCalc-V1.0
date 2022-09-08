@@ -225,7 +225,8 @@ struct expr *expr_from_string(char *a, int *good) {
   if (p && *p) {
     p = one_expr_from_string(p, &infix, good, &parents);  // First symbol
     struct ll_node *last = infix->head;
-    if (last->datum == '-' || last->datum == '+') make_unary_operator(last);
+    if (last->state == OPERATOR && (last->datum == '-' || last->datum == '+'))
+      make_unary_operator(last);
     if (infix->head->state == OPERATOR) {
       *good = 0;
     } else {
@@ -234,7 +235,8 @@ struct expr *expr_from_string(char *a, int *good) {
         struct ll_node *before;
         last = ll_last_node(infix->head);
         before = ll_before_last_node(infix->head);
-        if ((last->datum == '-' || last->datum == '+') &&
+        if ((last->state == OPERATOR &&
+             (last->datum == '-' || last->datum == '+')) &&
             ((before->state == OPERATOR) || (before->state == L_BRACKET)))
           make_unary_operator(last);
         *good = check_syntax(last, before);

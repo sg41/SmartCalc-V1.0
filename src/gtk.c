@@ -1,28 +1,7 @@
+#include "gtk.h"
+
 #include <gtk/gtk.h>
 #include <string.h>
-
-#include "graph.h"
-#include "rpr/core.h"
-#include "rpr/expr.h"
-
-int cut_selection(gpointer data) {
-  GtkEntry *src_str_entry = data;
-  const char *src_str = gtk_entry_get_text(src_str_entry);
-  char new_str[MAXSTR] = {0};
-  int cur_pos = 0;
-  int new_pos = 0;
-  int res = 0;
-
-  if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry, &new_pos,
-                                        &cur_pos) != FALSE) {
-    sprintf(new_str, "%.*s%s", new_pos, src_str, src_str + cur_pos);
-    gtk_entry_set_text(src_str_entry, new_str);
-    gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
-    res = cur_pos - new_pos;
-  }
-
-  return res;
-}
 
 extern void func_button_clicked(GtkButton *button, gpointer data) {
   GtkEntry *src_str_entry = data;
@@ -30,14 +9,14 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
   const char *func_name = gtk_button_get_label(button);
   const char *src_str = gtk_entry_get_text(src_str_entry);
   char new_str[MAXSTR] = {0};
-  int new_pos = 0;  // cur_pos + strlen(func_name);
+  int new_pos = 0;
   if (is_alpha(*func_name) && *func_name != 'X' && *func_name != 'm' &&
       *func_name != '^') {
     if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry,
                                           &new_pos, &cur_pos) != FALSE) {
       sprintf(new_str, "%.*s%s(%.*s)%s", new_pos, src_str, func_name,
               cur_pos - new_pos, src_str + new_pos, src_str + cur_pos);
-      new_pos += 2;  // 2 Bracets around selection
+      new_pos += 2;  // 2 Brackets around selection
     } else {
       sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
               src_str + cur_pos);
@@ -49,7 +28,7 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
     sprintf(new_str, "%.*s %s %s", cur_pos, src_str, func_name,
             src_str + cur_pos);
     new_pos += 2;  // 2 spaces around func name
-  } else if (*func_name == '(') {
+  } else if (*func_name == '(' || *func_name == ')') {
     if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry,
                                           &new_pos, &cur_pos) != FALSE) {
       sprintf(new_str, "%.*s(%.*s)%s", new_pos, src_str, cur_pos - new_pos,
@@ -62,7 +41,6 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
   } else {
     gtk_editable_delete_selection((GtkEditable *)src_str_entry);
     cur_pos = gtk_editable_get_position((GtkEditable *)src_str_entry);
-
     sprintf(new_str, "%.*s%s%s", cur_pos, src_str, func_name,
             src_str + cur_pos);
   }
@@ -71,10 +49,38 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
   gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
 }
 
+extern void get_history(GtkWidget *widget, gpointer data) {
+  calc_data *d = data;
+  const gchar *name = gtk_widget_get_name(widget);
+
+  if (strcmp(name, "last_expr_label") == 0) {
+    const gchar *label = gtk_label_get_text(GTK_LABEL(widget));
+    const char *p = strstr(label, " = ");
+    if (p != NULL)
+      strncpy(d->str, label, p - label);
+    else
+      strcpy(d->str, label);
+  }
+}
+
+extern void historybutton_clicked(GtkButton *button, gpointer data) {
+  GtkEntry *src_str_entry = data;
+  calc_data d;
+
+  GtkContainer *history_box =
+      (GtkContainer *)gtk_widget_get_parent((GtkWidget *)button);
+
+  init_calc_data(&d);
+  gtk_container_foreach(history_box, get_history, &d);
+  if (d.error == 0) {
+    gtk_entry_set_text(src_str_entry, d.str);
+    gtk_editable_set_position((GtkEditable *)src_str_entry, -1);
+  }
+}
+
 extern void backspace_clicked(GtkButton *button, gpointer data) {
   GtkEntry *src_str_entry = data;
   const char *src_str = gtk_entry_get_text(src_str_entry);
-  char new_str[MAXSTR] = {0};
   int cur_pos;
   int new_pos;
   if (gtk_editable_get_selection_bounds((GtkEditable *)src_str_entry, &new_pos,
@@ -83,19 +89,12 @@ extern void backspace_clicked(GtkButton *button, gpointer data) {
     new_pos = cur_pos - 1;
   }
   if (new_pos >= 0) {
+    char new_str[MAXSTR] = {0};
     sprintf(new_str, "%.*s%s", new_pos, src_str, src_str + cur_pos);
     gtk_entry_set_text(src_str_entry, new_str);
     gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
   }
 }
-
-typedef struct {
-  int iteration;
-  char str[MAXSTR];
-  double x;
-  char error_message[MAXSTR];
-  int error;
-} calc_data;
 
 void init_calc_data(calc_data *d) {
   d->iteration = 0;
@@ -112,10 +111,10 @@ extern void calculate(GtkWidget *widget, gpointer data) {
   strcpy(d->str, src_str_ptr);  // Save formula
   if (strlen(d->str)) {
     int good = 1;
-    double res;
     struct expr *infix = expr_from_string(d->str, &good);
     char res_str[MAXSTR];
     if (good) {
+      double res;
       struct expr *postfix = expr_shunt(infix);
       res = rpn_reduce(postfix, d->x);
       expr_destroy(&postfix);
@@ -128,6 +127,9 @@ extern void calculate(GtkWidget *widget, gpointer data) {
       strcpy(d->str, res_str);
     }
     gtk_entry_set_text((GtkEntry *)widget, res_str);
+    gtk_editable_select_region((GtkEditable *)widget, 0, -1);
+    // gtk_editable_set_position((GtkEditable *)widget, -1);
+
     expr_destroy(&infix);
   }
 }
@@ -155,7 +157,7 @@ extern int x_focus_out(GtkWidget *widget, GdkEventFocus event, gpointer data) {
     p++;
     len++;
   }
-  if (*p && *p == '-') {
+  if ((*p == '-')) {
     p++;
     len++;
   }
@@ -209,8 +211,6 @@ extern void exit_button_clicked(GtkWidget *widget, gpointer data) {
 
 int main(int argc, char *argv[]) {
   GtkBuilder *builder;
-  // GObject *window;
-  GObject *button;
   GError *error = NULL;
 
   gtk_init(&argc, &argv);
@@ -224,7 +224,6 @@ int main(int argc, char *argv[]) {
   }
 
   //Теперь получаем виджет из Builder
-  // Помните мы указывали ID? Вот по нему мы и ищем нужный
   // В данном случае ищем виджет окна
   GtkWidget *window =
       GTK_WIDGET(gtk_builder_get_object(builder, "calc_window"));

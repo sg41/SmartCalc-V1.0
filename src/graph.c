@@ -11,7 +11,11 @@
 int input(char *s);
 int draw_graph();
 
+#ifdef TXT_VERSION
 int main(int argc, char *argv[]) {
+#else
+int txt_main(int argc, char *argv[]) {
+#endif
   struct expr *infix;
   struct expr *postfix;
   char string[MAXSTR + 1] = {0};

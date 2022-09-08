@@ -35,7 +35,7 @@ gtk: gtk.c	$(LIB)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
 	[ -d ../build ] || mkdir ../build
-	gcc $(CCOPTS) graph.c -o $(APP) -l$(LIB) $(LDOPTS)
+	gcc $(CCOPTS) -DTXT_VERSION graph.c -o $(APP) -l$(LIB) $(LDOPTS)
 
 $(APP): graph
 
@@ -66,9 +66,11 @@ check: $(SOURCES) graph.c $(HEADERS) graph.h
 	clang-format -i $(SOURCES)
 	clang-format -i $(HEADERS)
 	clang-format -i graph.c graph.h
+	clang-format -i gtk.c gtk.h
 	clang-format -n $(SOURCES)
 	clang-format -n $(HEADERS)
 	clang-format -n graph.c graph.h
+	clang-format -n gtk.c gtk.h
 
 check2: $(SOURCES) graph.c $(HEADERS) graph.h
 	cppcheck --enable=all --suppress=missingIncludeSystem $(ROOT)/src/
