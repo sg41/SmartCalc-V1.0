@@ -12,19 +12,23 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
   const char *src_str = gtk_entry_get_text(src_str_entry);
   char new_str[MAXSTR] = {0};
   // sprintf(new_str, "%d", cur_pos);
-  if (cur_pos == 0 || cur_pos == -1) cur_pos = strlen(src_str);
+  int new_pos = cur_pos + strlen(func_name);
+  // if (cur_pos == 0) cur_pos = strlen(src_str);
   if (is_alpha(*func_name) && *func_name != 'X' && *func_name != 'm' &&
       *func_name != '^') {
     sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
             src_str + cur_pos);
+    new_pos += 1;  // Bracket behind func name
   } else if (*func_name == 'm') {
     sprintf(new_str, "%.*s %s %s", cur_pos, src_str, func_name,
             src_str + cur_pos);
+    new_pos += 2;  // 2 spaces around func name
   } else {
     sprintf(new_str, "%.*s%s%s", cur_pos, src_str, func_name,
             src_str + cur_pos);
   }
   gtk_entry_set_text(src_str_entry, new_str);
+  gtk_editable_set_position((GtkEditable *)src_str_entry, new_pos);
 }
 
 typedef struct {
