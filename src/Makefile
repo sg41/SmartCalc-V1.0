@@ -86,6 +86,8 @@ rebuild: clean all
 leaks: $(APP)
 	$(LEAKS) $(APP) $(APP_ARGS)
 
+leaks_test: test_leaks
+
 test_leaks: test
 	$(LEAKS) ./$(TEST_APP) $(APP_ARGS)
 

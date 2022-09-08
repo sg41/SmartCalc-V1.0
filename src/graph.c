@@ -8,9 +8,6 @@
 #include "rpr/core.h"
 #include "rpr/llist.h"
 
-int input(char *s);
-int draw_graph();
-
 #ifdef TXT_VERSION
 int main(int argc, char *argv[]) {
 #else

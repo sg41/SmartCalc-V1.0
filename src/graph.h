@@ -22,4 +22,7 @@
 #define MAXJ 25
 #define MIDDLEJ 13
 
+int input(char *s);
+int draw_txt_graph();
+
 #endif  // SRC_GRAPH_H_
