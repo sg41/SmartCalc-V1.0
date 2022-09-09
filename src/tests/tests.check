@@ -245,6 +245,25 @@ ck_assert_uint_eq(expected_result, actual_result);
 expr_destroy(&r);
 expr_destroy(&e);
 
+#test expr_7_40
+char str[1000] = "45+234*(55+40/8)";
+struct expr *e, *r;
+uint expected_result, actual_result;
+int res = 0;
+e = expr_from_string(str, &res);
+expected_result = 11;
+actual_result = e->length;
+D("%s\n", "!!!40!!!");
+ll_print(e->head);
+ck_assert_uint_eq(expected_result, actual_result);
+ck_assert_int_eq(res, 1);
+r = expr_shunt(e);
+expected_result = 9;
+actual_result = r->length;
+ck_assert_uint_eq(expected_result, actual_result);
+expr_destroy(&r);
+expr_destroy(&e);
+
 #test expr_many_functions
 char str[1000] = "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(x/2)-log(x mod 2)";
 struct expr *e, *r;

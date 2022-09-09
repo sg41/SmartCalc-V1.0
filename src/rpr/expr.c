@@ -119,7 +119,9 @@ struct expr *expr_shunt(const struct expr *infix) {
         stk_push(opstack, i->state, i->datum);
         break;
       case R_BRACKET:
-        while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
+        // while (stk_peek(opstack) != '(') stack_to_expr(rpn, opstack);
+        while (stk_peek_status(opstack) != L_BRACKET)
+          stack_to_expr(rpn, opstack);
         stk_pop(opstack);  // Забираем из стека открывающуюся скобку
         if (stk_peek_status(opstack) == FUNCTION) stack_to_expr(rpn, opstack);
         break;
@@ -128,7 +130,8 @@ struct expr *expr_shunt(const struct expr *infix) {
       case OPERATOR:
         while (opstack->depth > 0 &&
                precedence(opstack->top) >= precedence(i) &&
-               stk_peek(opstack) != '(')
+               stk_peek_status(opstack) != L_BRACKET)
+          //  stk_peek(opstack) != '(')
           stack_to_expr(rpn, opstack);
         stk_push(opstack, i->state, i->datum);
         break;
