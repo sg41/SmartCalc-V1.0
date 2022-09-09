@@ -17,7 +17,7 @@ extern void func_button_clicked(GtkButton *button, gpointer data) {
       sprintf(new_str, "%.*s%s(%.*s)%s", new_pos, src_str, func_name,
               cur_pos - new_pos, src_str + new_pos, src_str + cur_pos);
       new_pos += 2;  // 2 Brackets around selection
-    } else {
+    } else {         // If no selected text
       sprintf(new_str, "%.*s%s%s%s", cur_pos, src_str, func_name, "(",
               src_str + cur_pos);
       new_pos += 1;  // Bracket behind func name
