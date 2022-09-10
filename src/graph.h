@@ -1,8 +1,8 @@
 #ifndef SRC_GRAPH_H_
 #define SRC_GRAPH_H_
-
+#ifndef MAXSTR
 #define MAXSTR 10000
-
+#endif
 #ifdef NDEBUG
 #define D(fmt, ...) \
   do {              \

@@ -10,12 +10,26 @@
 #define ZOOM_X 100.0
 #define ZOOM_Y 100.0
 
+char *copy_expr_from_label(char *str, const char *label) {
+  const char *p = strstr(label, " = ");
+  if (p != NULL)
+    strncpy(str, label, p - label);
+  else
+    strcpy(str, label);
+  return str;
+}
+
 gfloat f(gfloat x) { return 0.03 * pow(x, 3); }
 
-extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer user_data) {
+extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
+  /* Prepare formula */
+  GtkLabel *history_label = data;
+  char expr[MAXSTR] = {0};
+  copy_expr_from_label(expr, gtk_label_get_text(history_label));
+
   GdkRectangle da;            /* GtkDrawingArea size */
   gdouble dx = 5.0, dy = 5.0; /* Pixels between each point */
-  gdouble i, clip_x1 = 0.0, clip_y1 = 0.0, clip_x2 = 0.0, clip_y2 = 0.0;
+  gdouble x, clip_x1 = 0.0, clip_y1 = 0.0, clip_x2 = 0.0, clip_y2 = 0.0;
   GdkWindow *window = gtk_widget_get_window(widget);
 
   /* Determine GtkDrawingArea dimensions */
@@ -44,7 +58,9 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer user_data) {
   cairo_stroke(cr);
 
   /* Link each data point */
-  for (i = clip_x1; i < clip_x2; i += dx) cairo_line_to(cr, i, f(i));
+  int good;
+  for (x = clip_x1; x < clip_x2; x += dx)
+    cairo_line_to(cr, x, calc(expr, x, &good));
 
   /* Draw the curve */
   cairo_set_source_rgba(cr, 1, 0.2, 0.2, 0.6);
@@ -104,12 +120,14 @@ extern void get_history(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
 
   if (strcmp(name, "last_expr_label") == 0) {
-    const gchar *label = gtk_label_get_text(GTK_LABEL(widget));
-    const char *p = strstr(label, " = ");
-    if (p != NULL)
-      strncpy(d->str, label, p - label);
-    else
-      strcpy(d->str, label);
+    // const gchar *label = gtk_label_get_text(GTK_LABEL(widget));
+    copy_expr_from_label(d->str, gtk_label_get_text(GTK_LABEL(widget)));
+
+    // const char *p = strstr(label, " = ");
+    // if (p != NULL)
+    //   strncpy(d->str, label, p - label);
+    // else
+    //   strcpy(d->str, label);
   }
 }
 
@@ -247,6 +265,7 @@ extern void calc_button_clicked(GtkButton *button, gpointer data) {
   gtk_container_foreach(calc_main_box, on_calculate, &d);
   d.iteration = 1;
   gtk_container_foreach(calc_main_box, on_calculate, &d);
+  gtk_widget_queue_draw((GtkWidget *)data);
 }
 
 extern void AC_button_clicked(GtkButton *button, gpointer data) {

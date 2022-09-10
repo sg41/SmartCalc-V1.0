@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "stack.h"
 
@@ -86,5 +87,23 @@ double rpn_reduce(const struct expr *e, double x) {
   }
   double res = stk_peek(k);
   stk_destroy(&k);
+  return res;
+}
+
+double calc(char *string, float x, int *good) {
+  double res = 0;
+
+  if (strlen(string)) {
+    struct expr *infix;
+    *good = 1;
+    infix = expr_from_string(string, good);
+    if (good) {
+      struct expr *postfix;
+      postfix = expr_shunt(infix);
+      res = rpn_reduce(postfix, x);
+      expr_destroy(&postfix);
+    }
+    expr_destroy(&infix);
+  }
   return res;
 }
