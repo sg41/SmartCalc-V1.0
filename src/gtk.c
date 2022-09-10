@@ -28,14 +28,14 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   copy_expr_from_label(expr, gtk_label_get_text(history_label));
 
   GdkRectangle da;            /* GtkDrawingArea size */
-  gdouble dx = 5.0, dy = 5.0; /* Pixels between each point */
+  gdouble dx = 1.0, dy = 1.0; /* Pixels between each point */
   gdouble x, clip_x1 = 0.0, clip_y1 = 0.0, clip_x2 = 0.0, clip_y2 = 0.0;
   GdkWindow *window = gtk_widget_get_window(widget);
 
   /* Determine GtkDrawingArea dimensions */
   gdk_window_get_geometry(window, &da.x, &da.y, &da.width, &da.height);
 
-  /* Draw on a black background */
+  /* Draw on a white background */
   cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
   cairo_paint(cr);
 
@@ -58,9 +58,18 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_stroke(cr);
 
   /* Link each data point */
-  int good;
-  for (x = clip_x1; x < clip_x2; x += dx)
-    cairo_line_to(cr, x, calc(expr, x, &good));
+  int good = 0, draw = 0;
+  for (x = clip_x1; x < clip_x2; x += dx) {
+    double y = calc(expr, x, &good);
+    if (good && draw && isfinite(y))
+      cairo_line_to(cr, x, y);
+    else
+      cairo_move_to(cr, x, y);
+    if (isfinite(y))
+      draw = 1;
+    else
+      draw = 0;
+  }
 
   /* Draw the curve */
   cairo_set_source_rgba(cr, 1, 0.2, 0.2, 0.6);
@@ -120,14 +129,7 @@ extern void get_history(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
 
   if (strcmp(name, "last_expr_label") == 0) {
-    // const gchar *label = gtk_label_get_text(GTK_LABEL(widget));
     copy_expr_from_label(d->str, gtk_label_get_text(GTK_LABEL(widget)));
-
-    // const char *p = strstr(label, " = ");
-    // if (p != NULL)
-    //   strncpy(d->str, label, p - label);
-    // else
-    //   strcpy(d->str, label);
   }
 }
 
