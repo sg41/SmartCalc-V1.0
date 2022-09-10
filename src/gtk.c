@@ -56,7 +56,7 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_move_to(cr, 0.0, clip_y1);
   cairo_line_to(cr, 0.0, clip_y2);
   cairo_stroke(cr);
-
+  // TODO put the clip extents to graph_size_box
   /* Link each data point */
   int good = 0, draw = 0;
   for (x = clip_x1; x < clip_x2; x += dx) {
