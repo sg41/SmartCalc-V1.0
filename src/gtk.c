@@ -25,10 +25,10 @@ void gtk_entry_set_double(GtkEntry *entry, double d) {
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 void gtk_entry_get_double(GtkEntry *entry, double *d) {
-  char str[MAXSTR] = {0};
+  // char str[MAXSTR] = {0};
   const gchar *p;
   p = gtk_entry_get_text(GTK_ENTRY(entry));
-  if (sscanf(str, "%lf", d) != 1) *d = 0;
+  if (sscanf(p, "%lf", d) != 1) *d = 0;
 }
 
 extern void on_set_graph_size(GtkWidget *widget, gpointer data) {
@@ -102,23 +102,30 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   /* Draw on a white background */
   cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
   cairo_paint(cr);
-
-  /* Change the transformation matrix */
-  cairo_translate(cr, da.width / 2, da.height / 2); /* Set 0.0 point */
-  /* comtute and set scale */
+  /* read function domain and codomain */
   get_graph_size(widget, &d);
-  // zx = da.width / (fabs(d.clip_x1) + fabs(d.clip_x2));
-  // zy = da.height / (fabs(d.clip_y1) + fabs(d.clip_y2));
-  // cairo_scale(cr, zx, -zy);
-  cairo_scale(cr, ZOOM_X, -ZOOM_Y);
+  /* Change the transformation matrix */
+
+  /* compute and set scale */
+  zx = da.width / fabs((d.clip_x2) - (d.clip_x1));
+  zy = da.height / fabs((d.clip_y2) - (d.clip_y1));
+  cairo_translate(
+      cr, zx * (fabs((d.clip_x2) - (d.clip_x1)) - fmax(d.clip_x2, d.clip_x1)),
+      zy * fmax(d.clip_y2, d.clip_y1)); /* Set 0.0 point */
+  cairo_scale(cr, zx, -zy);
+  // cairo_translate(
+  //     cr, da.width * (d.clip_x2 / (fabs(d.clip_x1) + fabs(d.clip_x2))),
+  //     da.height * (d.clip_y2 /
+  //                  (fabs(d.clip_y1) + fabs(d.clip_y2)))); /* Set 0.0 point */
+  // cairo_translate(cr, da.width / 2, da.height / 2); /* Set 0.0 point */
+  // cairo_scale(cr, ZOOM_X, -ZOOM_Y);
 
   /* Determine the data points to calculate (ie. those in the clipping zone */
   cairo_device_to_user_distance(cr, &dx, &dy);
-  cairo_clip_extents(cr, &d.clip_x1, &d.clip_y1, &d.clip_x2, &d.clip_y2);
+  // cairo_clip_extents(cr, &d.clip_x1, &d.clip_y1, &d.clip_x2, &d.clip_y2);
   cairo_set_line_width(cr, dx);
 
   /* put clip coordinates to graph_size_box */
-  get_graph_size(widget, &d);
   set_graph_size(widget, &d);
 
   /* Draws x and y axis */
