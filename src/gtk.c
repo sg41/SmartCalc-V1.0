@@ -113,16 +113,10 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
       cr, zx * (fabs((d.clip_x2) - (d.clip_x1)) - fmax(d.clip_x2, d.clip_x1)),
       zy * fmax(d.clip_y2, d.clip_y1)); /* Set 0.0 point */
   cairo_scale(cr, zx, -zy);
-  // cairo_translate(
-  //     cr, da.width * (d.clip_x2 / (fabs(d.clip_x1) + fabs(d.clip_x2))),
-  //     da.height * (d.clip_y2 /
-  //                  (fabs(d.clip_y1) + fabs(d.clip_y2)))); /* Set 0.0 point */
-  // cairo_translate(cr, da.width / 2, da.height / 2); /* Set 0.0 point */
-  // cairo_scale(cr, ZOOM_X, -ZOOM_Y);
 
   /* Determine the data points to calculate (ie. those in the clipping zone */
   cairo_device_to_user_distance(cr, &dx, &dy);
-  // cairo_clip_extents(cr, &d.clip_x1, &d.clip_y1, &d.clip_x2, &d.clip_y2);
+  // cairo_set_line_width(cr, 0.1);
   cairo_set_line_width(cr, dx);
 
   /* put clip coordinates to graph_size_box */
