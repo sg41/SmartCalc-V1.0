@@ -11,6 +11,10 @@ typedef struct {
   double x;
   char error_message[MAXSTR];
   int error;
+  double clip_x1;
+  double clip_y1;
+  double clip_x2;
+  double clip_y2;
 } calc_data;
 
 void init_calc_data(calc_data *d);

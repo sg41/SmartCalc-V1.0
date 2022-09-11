@@ -19,47 +19,118 @@ char *copy_expr_from_label(char *str, const char *label) {
   return str;
 }
 
-gfloat f(gfloat x) { return 0.03 * pow(x, 3); }
+void gtk_entry_set_double(GtkEntry *entry, double d) {
+  char str[MAXSTR] = {0};
+  sprintf(str, "%lf", d);
+  gtk_entry_set_text(GTK_ENTRY(entry), str);
+}
+void gtk_entry_get_double(GtkEntry *entry, double *d) {
+  char str[MAXSTR] = {0};
+  const gchar *p;
+  p = gtk_entry_get_text(GTK_ENTRY(entry));
+  if (sscanf(str, "%lf", d) != 1) *d = 0;
+}
+
+extern void on_set_graph_size(GtkWidget *widget, gpointer data) {
+  calc_data *d = data;
+  const gchar *name = gtk_widget_get_name(widget);
+
+  if (strcmp(name, "graph_size_box") == 0) {
+    gtk_container_foreach(GTK_CONTAINER(widget), on_set_graph_size, data);
+  }
+  if (strcmp(name, "min_x") == 0) {
+    gtk_entry_set_double(GTK_ENTRY(widget), d->clip_x1);
+  }
+  if (strcmp(name, "max_x") == 0) {
+    gtk_entry_set_double(GTK_ENTRY(widget), d->clip_x2);
+  }
+  if (strcmp(name, "min_y") == 0) {
+    gtk_entry_set_double(GTK_ENTRY(widget), d->clip_y1);
+  }
+  if (strcmp(name, "max_y") == 0) {
+    gtk_entry_set_double(GTK_ENTRY(widget), d->clip_y2);
+  }
+}
+extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
+  calc_data *d = data;
+  const gchar *name = gtk_widget_get_name(widget);
+
+  if (strcmp(name, "graph_size_box") == 0) {
+    gtk_container_foreach(GTK_CONTAINER(widget), on_get_graph_size, data);
+  }
+  if (strcmp(name, "min_x") == 0) {
+    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1);
+  }
+  if (strcmp(name, "max_x") == 0) {
+    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2);
+  }
+  if (strcmp(name, "min_y") == 0) {
+    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1);
+  }
+  if (strcmp(name, "max_y") == 0) {
+    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2);
+  }
+}
+
+extern void set_graph_size(GtkWidget *widget, gpointer data) {
+  GtkContainer *calc_screen =
+      (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
+  gtk_container_foreach(calc_screen, on_set_graph_size, data);
+}
+
+extern void get_graph_size(GtkWidget *widget, gpointer data) {
+  GtkContainer *calc_screen =
+      (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
+  gtk_container_foreach(calc_screen, on_get_graph_size, data);
+}
 
 extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   /* Prepare formula */
   GtkLabel *history_label = data;
   char expr[MAXSTR] = {0};
   copy_expr_from_label(expr, gtk_label_get_text(history_label));
-
   GdkRectangle da;            /* GtkDrawingArea size */
   gdouble dx = 1.0, dy = 1.0; /* Pixels between each point */
-  gdouble x, clip_x1 = 0.0, clip_y1 = 0.0, clip_x2 = 0.0, clip_y2 = 0.0;
+  calc_data d;
+  init_calc_data(&d);
+  gdouble x;
+  gdouble zx, zy;
   GdkWindow *window = gtk_widget_get_window(widget);
 
   /* Determine GtkDrawingArea dimensions */
   gdk_window_get_geometry(window, &da.x, &da.y, &da.width, &da.height);
-
   /* Draw on a white background */
   cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
   cairo_paint(cr);
 
   /* Change the transformation matrix */
-  cairo_translate(cr, da.width / 2, da.height / 2);
+  cairo_translate(cr, da.width / 2, da.height / 2); /* Set 0.0 point */
+  /* comtute and set scale */
+  get_graph_size(widget, &d);
+  // zx = da.width / (fabs(d.clip_x1) + fabs(d.clip_x2));
+  // zy = da.height / (fabs(d.clip_y1) + fabs(d.clip_y2));
+  // cairo_scale(cr, zx, -zy);
   cairo_scale(cr, ZOOM_X, -ZOOM_Y);
 
   /* Determine the data points to calculate (ie. those in the clipping zone */
   cairo_device_to_user_distance(cr, &dx, &dy);
-  cairo_clip_extents(cr, &clip_x1, &clip_y1, &clip_x2, &clip_y2);
-  // cairo_set_line_width(cr, dx);
-  cairo_set_line_width(cr, 0.01);
+  cairo_clip_extents(cr, &d.clip_x1, &d.clip_y1, &d.clip_x2, &d.clip_y2);
+  cairo_set_line_width(cr, dx);
+
+  /* put clip coordinates to graph_size_box */
+  get_graph_size(widget, &d);
+  set_graph_size(widget, &d);
 
   /* Draws x and y axis */
   cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  cairo_move_to(cr, clip_x1, 0.0);
-  cairo_line_to(cr, clip_x2, 0.0);
-  cairo_move_to(cr, 0.0, clip_y1);
-  cairo_line_to(cr, 0.0, clip_y2);
+  cairo_move_to(cr, d.clip_x1, 0.0);
+  cairo_line_to(cr, d.clip_x2, 0.0);
+  cairo_move_to(cr, 0.0, d.clip_y1);
+  cairo_line_to(cr, 0.0, d.clip_y2);
   cairo_stroke(cr);
-  // TODO put the clip extents to graph_size_box
   /* Link each data point */
   int good = 0, draw = 0;
-  for (x = clip_x1; x < clip_x2; x += dx) {
+  for (x = d.clip_x1; x < d.clip_x2; x += dx) {
     double y = calc(expr, x, &good);
     if (good && draw && isfinite(y))
       cairo_line_to(cr, x, y);
@@ -172,6 +243,10 @@ void init_calc_data(calc_data *d) {
   d->x = 0;
   d->error = 0;
   memset(d->error_message, 0, sizeof(d->error_message));
+  d->clip_x1 = 0;
+  d->clip_x2 = 0;
+  d->clip_y1 = 0;
+  d->clip_y2 = 0;
 }
 
 extern void calculate(GtkWidget *widget, gpointer data) {
@@ -288,7 +363,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v3.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v4.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
