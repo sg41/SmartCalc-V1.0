@@ -100,30 +100,37 @@ extern void get_graph_size(GtkWidget *widget, gpointer data) {
   gtk_container_foreach(calc_screen, on_get_graph_size, data);
 }
 
-void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data) {
+void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
+               int height) {
   calc_data *d = data;
   /* Draws x and y axis */
-
+  // double dx = 10, dy = 10;
   cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  if (d->clip_x1 < 0 && d->clip_x2 > 0) {
-    cairo_move_to(cr, 0.0, d->clip_y1);
-    cairo_line_to(cr, 0.0, d->clip_y2);
-  } else {
-    cairo_move_to(cr, d->clip_x1, d->clip_y1);
-    cairo_line_to(cr, d->clip_x1, d->clip_y2);
-  }
+  cairo_move_to(cr, d->clip_x1, 0.0);
+  cairo_line_to(cr, d->clip_x2, 0.0);
+  cairo_move_to(cr, 0.0, d->clip_y1);
+  cairo_line_to(cr, 0.0, d->clip_y2);
 
-  if (d->clip_y1 < 0 && d->clip_y2 > 0) {
-    cairo_move_to(cr, d->clip_x1, 0.0);
-    cairo_line_to(cr, d->clip_x2, 0.0);
-  } else {
-    cairo_move_to(cr, d->clip_x1, d->clip_y2);
-    cairo_line_to(cr, d->clip_x2, d->clip_y2);
-  }
-  // cairo_stroke(cr);
-  // cairo_clip_extents (cr, &clip_x1, &clip_y1, &clip_x2, &clip_y2);
+  // cairo_device_to_user_distance(cr, &dx, &dy);
 
-  for (double ya = d->clip_y1; ya < d->clip_y2;
+  //  cairo_clip_extents (cr, &clip_x1, &clip_y1, &clip_x2, &clip_y2);
+  // cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+  // cairo_move_to(cr, d->clip_x1 + dx, d->clip_y1);
+  // cairo_line_to(cr, d->clip_x1 + dx, d->clip_y2);
+  // }
+
+  // if (d->clip_y1 < 0 && d->clip_y2 > 0) {
+  // cairo_move_to(cr, d->clip_x1, d->clip_y1 - dy);
+  // cairo_line_to(cr, d->clip_x2, d->clip_y1 - dy);
+  // } else {
+  // cairo_move_to(cr, 50., 0.);
+  // cairo_line_to(cr, 50., 100.);
+  // cairo_restore(cr);
+
+  // }
+  cairo_stroke(cr);
+
+  /*for (double ya = d->clip_y1; ya < d->clip_y2;
        ya += fabs(d->clip_y2 - d->clip_y1) / 4) {
     // преобразовывем значение координаты риски в строку
     char buf[MAXSTR];
@@ -131,7 +138,8 @@ void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
     // рисуем текст метки в нужной точке
 
-    cairo_move_to(cr, 12, ya + 2);
+    cairo_move_to(cr, d->clip_x1, ya);
+    cairo_line_to(cr, d->clip_x1 +, ya);
 
     // cairo_show_text(cr, buf);
 
@@ -147,8 +155,8 @@ void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
         cairo_stroke(cr);
 
-        ya -= 40;*/
-  }
+        ya -= 40;
+  }*/
 }
 
 extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
@@ -186,13 +194,13 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_set_line_width(cr, dx);
 
   /* Draws x and y axis */
-  /*cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  cairo_move_to(cr, d.clip_x1, 0.0);
-  cairo_line_to(cr, d.clip_x2, 0.0);
-  cairo_move_to(cr, 0.0, d.clip_y1);
-  cairo_line_to(cr, 0.0, d.clip_y2);*/
-  draw_grid(widget, cr, &d);
-  cairo_stroke(cr);
+  // cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+  // cairo_move_to(cr, d.clip_x1, 0.0);
+  // cairo_line_to(cr, d.clip_x2, 0.0);
+  // cairo_move_to(cr, 0.0, d.clip_y1);
+  // cairo_line_to(cr, 0.0, d.clip_y2);
+  draw_grid(widget, cr, &d, da.width, da.height);
+  // cairo_stroke(cr);
   /* Link each data point */
   int good = 0, draw = 0;
   for (x = d.clip_x1; x < d.clip_x2; x += dx) {
