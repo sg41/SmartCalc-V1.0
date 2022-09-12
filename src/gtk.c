@@ -18,10 +18,15 @@ void gtk_entry_set_double(GtkEntry *entry, double d) {
   sprintf(str, "%lf", d);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
-void gtk_entry_get_double(GtkEntry *entry, double *d) {
+int gtk_entry_get_double(GtkEntry *entry, double *d) {
   const gchar *p;
+  int res = 1;
   p = gtk_entry_get_text(GTK_ENTRY(entry));
-  if (sscanf(p, "%lf", d) != 1) *d = 0;
+  if (sscanf(p, "%lf", d) != 1) {
+    *d = 0;
+    res = 0;
+  }
+  return res;
 }
 
 extern void on_set_graph_size(GtkWidget *widget, gpointer data) {
@@ -52,16 +57,28 @@ extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
     gtk_container_foreach(GTK_CONTAINER(widget), on_get_graph_size, data);
   }
   if (strcmp(name, "min_x") == 0) {
-    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1);
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1) == 0) {
+      d->error = 1;
+      strcpy(d->error_message, "Can't read min x");
+    }
   }
   if (strcmp(name, "max_x") == 0) {
-    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2);
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2) == 0) {
+      d->error = 1;
+      strcpy(d->error_message, "Can't read max x");
+    }
   }
   if (strcmp(name, "min_y") == 0) {
-    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1);
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1) == 0) {
+      d->error = 1;
+      strcpy(d->error_message, "Can't read min y");
+    }
   }
   if (strcmp(name, "max_y") == 0) {
-    gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2);
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2) == 0) {
+      d->error = 1;
+      strcpy(d->error_message, "Can't read max y");
+    }
   }
 }
 
@@ -71,10 +88,67 @@ extern void set_graph_size(GtkWidget *widget, gpointer data) {
   gtk_container_foreach(calc_screen, on_set_graph_size, data);
 }
 
+/**
+ * @brief Get the graph size from "grap_size box" fields
+ * fills data->clip_x1 etc. dimensions of graph in user coordinates
+ * @param widget - any "cacl_screen" child widget
+ * @param data calc_data structure pointer to fill with coordinates
+ */
 extern void get_graph_size(GtkWidget *widget, gpointer data) {
   GtkContainer *calc_screen =
       (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
   gtk_container_foreach(calc_screen, on_get_graph_size, data);
+}
+
+void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data) {
+  calc_data *d = data;
+  /* Draws x and y axis */
+
+  cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+  if (d->clip_x1 < 0 && d->clip_x2 > 0) {
+    cairo_move_to(cr, 0.0, d->clip_y1);
+    cairo_line_to(cr, 0.0, d->clip_y2);
+  } else {
+    cairo_move_to(cr, d->clip_x1, d->clip_y1);
+    cairo_line_to(cr, d->clip_x1, d->clip_y2);
+  }
+
+  if (d->clip_y1 < 0 && d->clip_y2 > 0) {
+    cairo_move_to(cr, d->clip_x1, 0.0);
+    cairo_line_to(cr, d->clip_x2, 0.0);
+  } else {
+    cairo_move_to(cr, d->clip_x1, d->clip_y2);
+    cairo_line_to(cr, d->clip_x2, d->clip_y2);
+  }
+  // cairo_stroke(cr);
+  // cairo_clip_extents (cr, &clip_x1, &clip_y1, &clip_x2, &clip_y2);
+
+  for (double ya = d->clip_y1; ya < d->clip_y2;
+       ya += fabs(d->clip_y2 - d->clip_y1) / 4) {
+    // преобразовывем значение координаты риски в строку
+    char buf[MAXSTR];
+    sprintf(buf, "%.1lf", ya);
+
+    // рисуем текст метки в нужной точке
+
+    cairo_move_to(cr, 12, ya + 2);
+
+    // cairo_show_text(cr, buf);
+
+    // задаем зеленый цвет
+    /*
+        cairo_set_source_rgb(cr, 0, 0.5, 0);
+
+        // рисуем линии сетки
+
+        cairo_move_to(cr, 47, ya - 40);
+
+        cairo_line_to(cr, 600, ya - 40);
+
+        cairo_stroke(cr);
+
+        ya -= 40;*/
+  }
 }
 
 extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
@@ -112,11 +186,12 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_set_line_width(cr, dx);
 
   /* Draws x and y axis */
-  cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+  /*cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
   cairo_move_to(cr, d.clip_x1, 0.0);
   cairo_line_to(cr, d.clip_x2, 0.0);
   cairo_move_to(cr, 0.0, d.clip_y1);
-  cairo_line_to(cr, 0.0, d.clip_y2);
+  cairo_line_to(cr, 0.0, d.clip_y2);*/
+  draw_grid(widget, cr, &d);
   cairo_stroke(cr);
   /* Link each data point */
   int good = 0, draw = 0;
@@ -333,6 +408,31 @@ extern void calc_button_clicked(GtkButton *button, gpointer data) {
   d.iteration = 1;
   gtk_container_foreach(calc_main_box, on_calculate, &d);
   gtk_widget_queue_draw((GtkWidget *)data);
+}
+
+int check_graph_sizes(calc_data *d) {
+  int res = 1;
+  if (d->clip_x1 < VERY_MIN_X || d->clip_x1 > d->clip_x2) res = 0;
+  if (d->clip_x2 > VERY_MAX_X || d->clip_x2 < d->clip_x1) res = 0;
+  if (d->clip_y1 < VERY_MIN_Y || d->clip_y1 > d->clip_y2) res = 0;
+  if (d->clip_y2 > VERY_MAX_Y || d->clip_y2 < d->clip_y1) res = 0;
+  return res;
+}
+
+extern void apply_button_clicked(GtkButton *button, gpointer data) {
+  calc_data d;
+  init_calc_data(&d);
+  GtkWidget *graph_area = data;
+  get_graph_size((GtkWidget *)graph_area, &d);
+  if (d.error != 0 || check_graph_sizes(&d) != 1) {
+    d.clip_x1 = MINX;
+    d.clip_x2 = MAXX;
+    d.clip_y1 = MINY;
+    d.clip_y2 = MAXY;
+  }
+
+  set_graph_size((GtkWidget *)graph_area, &d);
+  gtk_widget_queue_draw((GtkWidget *)graph_area);
 }
 
 extern void AC_button_clicked(GtkButton *button, gpointer data) {

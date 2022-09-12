@@ -17,5 +17,17 @@ typedef struct {
   double clip_y2;
 } calc_data;
 
+#ifndef MINX
+#define MINX -3
+#define MAXX 3  // 4 * 3.14
+#define MINY -1
+#define MAXY 1
+#endif
+
+#define VERY_MIN_X -1000000
+#define VERY_MAX_X 1000000
+#define VERY_MIN_Y -1000000
+#define VERY_MAX_Y 1000000
+
 void init_calc_data(calc_data *d);
 #endif  // SRC_GTK_H_
