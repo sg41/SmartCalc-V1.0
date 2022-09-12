@@ -4,12 +4,6 @@
 #include <gtk/gtk.h>
 #include <string.h>
 
-#define WIDTH 640
-#define HEIGHT 480
-
-#define ZOOM_X 100.0
-#define ZOOM_Y 100.0
-
 char *copy_expr_from_label(char *str, const char *label) {
   const char *p = strstr(label, " = ");
   if (p != NULL)
@@ -25,7 +19,6 @@ void gtk_entry_set_double(GtkEntry *entry, double d) {
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 void gtk_entry_get_double(GtkEntry *entry, double *d) {
-  // char str[MAXSTR] = {0};
   const gchar *p;
   p = gtk_entry_get_text(GTK_ENTRY(entry));
   if (sscanf(p, "%lf", d) != 1) *d = 0;
@@ -104,11 +97,11 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_paint(cr);
   /* read function domain and codomain */
   get_graph_size(widget, &d);
-  /* Change the transformation matrix */
 
-  /* compute and set scale */
+  /* compute scale */
   zx = da.width / fabs((d.clip_x2) - (d.clip_x1));
   zy = da.height / fabs((d.clip_y2) - (d.clip_y1));
+  /* Change the transformation matrix */
   cairo_translate(
       cr, zx * (fabs((d.clip_x2) - (d.clip_x1)) - fmax(d.clip_x2, d.clip_x1)),
       zy * fmax(d.clip_y2, d.clip_y1)); /* Set 0.0 point */
@@ -116,11 +109,7 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
   /* Determine the data points to calculate (ie. those in the clipping zone */
   cairo_device_to_user_distance(cr, &dx, &dy);
-  // cairo_set_line_width(cr, 0.1);
   cairo_set_line_width(cr, dx);
-
-  /* put clip coordinates to graph_size_box */
-  set_graph_size(widget, &d);
 
   /* Draws x and y axis */
   cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
@@ -364,7 +353,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v4.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v5.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
@@ -374,9 +363,6 @@ int main(int argc, char *argv[]) {
   // В данном случае ищем виджет окна
   GtkWidget *window =
       GTK_WIDGET(gtk_builder_get_object(builder, "calc_window"));
-
-  //Таким же образом можно получить и другие виджеты
-  // но нам они не понадобятся
 
   //Подключаем сигналы)
   gtk_builder_connect_signals(builder, NULL);
