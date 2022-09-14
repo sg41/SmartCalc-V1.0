@@ -1,6 +1,8 @@
 #ifndef SRC_GTK_H_
 #define SRC_GTK_H_
 
+#include <assert.h>
+
 #include "graph.h"
 #include "rpr/core.h"
 #include "rpr/expr.h"
@@ -28,6 +30,10 @@ typedef struct {
 #define VERY_MAX_X 1000000
 #define VERY_MIN_Y -1000000
 #define VERY_MAX_Y 1000000
+
+#ifndef EPS
+#define EPS 1e-7
+#endif
 
 void init_calc_data(calc_data *d);
 #endif  // SRC_GTK_H_

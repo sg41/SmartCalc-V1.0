@@ -85,25 +85,119 @@ extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
 extern void set_graph_size(GtkWidget *widget, gpointer data) {
   GtkContainer *calc_screen =
       (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
-  gtk_container_foreach(calc_screen, on_set_graph_size, data);
+  const gchar *name = gtk_widget_get_name((GtkWidget *)calc_screen);
+  if (strcmp(name, "calc_screen") == 0)
+    gtk_container_foreach(calc_screen, on_set_graph_size, data);
+  else
+    assert(0);
 }
 
 /**
  * @brief Get the graph size from "grap_size box" fields
  * fills data->clip_x1 etc. dimensions of graph in user coordinates
- * @param widget - any "cacl_screen" child widget
+ * @param widget - any "calc_screen" child widget
  * @param data calc_data structure pointer to fill with coordinates
  */
 extern void get_graph_size(GtkWidget *widget, gpointer data) {
   GtkContainer *calc_screen =
       (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
-  gtk_container_foreach(calc_screen, on_get_graph_size, data);
+  const gchar *name = gtk_widget_get_name((GtkWidget *)calc_screen);
+  if (strcmp(name, "calc_screen") == 0)
+    gtk_container_foreach(calc_screen, on_get_graph_size, data);
+  else
+    assert(0);
+}
+
+void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
+                   int height) {
+  cairo_save(cr);
+  calc_data *d = data;
+
+  double zx, zy, dx, dy;
+
+  dx = fabs((d->clip_x2) - (d->clip_x1));
+  dy = fabs((d->clip_y2) - (d->clip_y1));
+  zx = width / dx;
+  zy = height / dy;
+  /* Change the transformation matrix */
+  // cairo_translate(cr, zx * (dx - fmax(d->clip_x2, d->clip_x1)),
+  //                 zy * fmax(d->clip_y2, d->clip_y1)); /* Set 0.0 point */
+
+  int x = 0;
+  for (double i = d->clip_x1; i <= d->clip_x2; i += dx / 10, x += width / 10) {
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    if (x != 0) {
+      cairo_move_to(cr, x + 5, height - 5);
+      char grid[10];
+      sprintf(grid, "%.1f", i);
+      cairo_show_text(cr, grid);
+      if (fabs(i) <= EPS) {
+        cairo_set_source_rgba(cr, 0, 0, 0, 1);
+        cairo_move_to(cr, x, height);
+        cairo_line_to(cr, x, 0);
+        cairo_stroke(cr);
+      } else {
+        cairo_set_source_rgba(cr, .5, 0.5, 0.5, 0.5);
+        cairo_move_to(cr, x, height);
+        cairo_line_to(cr, x, 0);
+        cairo_stroke(cr);
+      }
+    } else {
+      cairo_move_to(cr, x, height);
+      cairo_line_to(cr, x, 0);
+    }
+  }
+  int y = height;
+  for (double i = d->clip_y1; i <= d->clip_y2; i += dy / 10, y -= height / 10) {
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    if (y != height) {
+      cairo_move_to(cr, 10, y - 5);
+      char grid[10];
+      sprintf(grid, "%.1f", i);
+      cairo_show_text(cr, grid);
+      if (fabs(i) <= EPS) {
+        cairo_set_source_rgba(cr, 0, 0, 0, 1);
+        cairo_move_to(cr, 0, y);
+        cairo_line_to(cr, width, y);
+        cairo_stroke(cr);
+      } else {
+        cairo_set_source_rgba(cr, .5, 0.5, 0.5, 0.5);
+        cairo_move_to(cr, 0, y);
+        cairo_line_to(cr, width, y);
+        cairo_stroke(cr);
+      }
+    } else {
+      cairo_move_to(cr, 0, y);
+      cairo_line_to(cr, width, y);
+    }
+  }
+  cairo_stroke(cr);
+
+  // cairo_scale(cr, 1, -1);
+  // cairo_set_source_rgb(cr, 0, 0, 0);
+  // cairo_move_to(cr, 0, 0);
+  // cairo_move_to(cr, -width / 2, 0);
+  // cairo_line_to(cr, width / 2, 0);
+  // cairo_move_to(cr, (width / 2) - 20, 10);
+  // cairo_line_to(cr, width / 2, 0);
+  // cairo_line_to(cr, (width / 2) - 20, -10);
+  // cairo_move_to(cr, 0, -height / 2);
+  // cairo_line_to(cr, 0, height / 2);
+  // cairo_move_to(cr, -10, (height / 2) - 20);
+  // cairo_line_to(cr, 0, height / 2);
+  // cairo_line_to(cr, 10, (height / 2) - 20);
+  // cairo_stroke(cr);
+  cairo_restore(cr);
 }
 
 void draw_grid_old(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
                    int height) {
+  cairo_save(cr);
+
+  cairo_translate(cr, width / 2, height / 2); /* Set 0.0 point */
+
   cairo_set_source_rgb(cr, 0, 0, 0);
-  for (double i = -width / 2; i <= width / 2; i += width / 20) {
+  for (double i = -width / 2; i <= width / 2; i += width / 10) {
     cairo_set_source_rgb(cr, 0, 0, 0);
 
     cairo_move_to(cr, i, 0);
@@ -115,7 +209,7 @@ void draw_grid_old(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
       cairo_show_text(cr, grid);
     }
   }
-  for (double i = -height / 2; i <= height / 2; i += height / 20) {
+  for (double i = -height / 2; i <= height / 2; i += height / 10) {
     cairo_set_source_rgb(cr, 0, 0, 0);
 
     cairo_move_to(cr, 0, i);
@@ -141,6 +235,8 @@ void draw_grid_old(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
   cairo_move_to(cr, -10, (height / 2) - 20);
   cairo_line_to(cr, 0, height / 2);
   cairo_line_to(cr, 10, (height / 2) - 20);
+  cairo_stroke(cr);
+  cairo_restore(cr);
 }
 
 void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
@@ -222,9 +318,8 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   cairo_paint(cr);
   /* read function domain and codomain */
   get_graph_size(widget, &d);
-
-  // draw_grid(widget, cr, &d, da.width, da.height);
-
+  /* Draws x and y axis */
+  draw_grid_new(widget, cr, &d, da.width, da.height);
   /* compute scale */
   zx = da.width / fabs((d.clip_x2) - (d.clip_x1));
   zy = da.height / fabs((d.clip_y2) - (d.clip_y1));
@@ -237,15 +332,6 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   /* Determine the data points to calculate (ie. those in the clipping zone */
   cairo_device_to_user_distance(cr, &dx, &dy);
   cairo_set_line_width(cr, dx);
-
-  /* Draws x and y axis */
-  // cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  // cairo_move_to(cr, d.clip_x1, 0.0);
-  // cairo_line_to(cr, d.clip_x2, 0.0);
-  // cairo_move_to(cr, 0.0, d.clip_y1);
-  // cairo_line_to(cr, 0.0, d.clip_y2);
-  draw_grid(widget, cr, &d, da.width, da.height);
-  // cairo_stroke(cr);
   /* Link each data point */
   int good = 0, draw = 0;
   for (x = d.clip_x1; x < d.clip_x2; x += dx) {
