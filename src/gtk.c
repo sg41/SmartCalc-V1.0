@@ -483,7 +483,6 @@ extern void graph_button_clicked(GtkButton *button, gpointer data) {
   } else {
     gtk_widget_show_all(graph_box);
   }
-  // gtk_widget_queue_draw((GtkWidget *)graph_area);
 }
 
 extern void AC_button_clicked(GtkButton *button, gpointer data) {

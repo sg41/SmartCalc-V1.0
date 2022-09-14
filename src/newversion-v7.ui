@@ -814,50 +814,29 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="credit_calc_box">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkGrid">
+              <object class="GtkGrid" id="source_grid">
+                <property name="name">source_grid</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="valign">start</property>
+                <property name="halign">end</property>
                 <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
+                <property name="margin_right">30</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <property name="hexpand">True</property>
-                <property name="row_spacing">5</property>
+                <property name="row_spacing">20</property>
                 <property name="column_spacing">5</property>
                 <child>
-                  <object class="GtkEntry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="input_purpose">number</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                    <property name="width">2</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Credit amount</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                    <property name="width">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Duration</property>
+                    <property name="label" translatable="yes">
+
+Duration</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -881,15 +860,18 @@
                       <item id="18" translatable="yes">1.5 year</item>
                     </items>
                     <child internal-child="entry">
-                      <object class="GtkEntry">
+                      <object class="GtkEntry" id="duration_combo">
+                        <property name="name">duration_combo</property>
                         <property name="can_focus">False</property>
+                        <property name="text" translatable="yes">1 year</property>
+                        <property name="xalign">1</property>
                       </object>
                     </child>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
                     <property name="top_attach">3</property>
-                    <property name="width">3</property>
+                    <property name="width">2</property>
                   </packing>
                 </child>
                 <child>
@@ -897,6 +879,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">RUB</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -907,7 +890,9 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">% rate</property>
+                    <property name="label" translatable="yes">
+
+% rate</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -916,9 +901,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry">
+                  <object class="GtkEntry" id="rate_entry">
+                    <property name="name">rate_entry</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="text" translatable="yes">9.5</property>
+                    <property name="xalign">1</property>
+                    <property name="input_purpose">digits</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -931,6 +920,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">%</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="left_attach">2</property>
@@ -938,8 +928,9 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton">
+                  <object class="GtkButton" id="credit_calc_button">
                     <property name="label" translatable="yes">calculate</property>
+                    <property name="name">credit_calc_button</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -948,6 +939,40 @@
                     <property name="left_attach">1</property>
                     <property name="top_attach">6</property>
                   </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="amount_entry">
+                    <property name="name">amount_entry</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="text" translatable="yes">100000</property>
+                    <property name="xalign">1</property>
+                    <property name="input_purpose">digits</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="valign">end</property>
+                    <property name="label" translatable="yes">
+
+Credit amount</property>
+                    <property name="yalign">1</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
                 <child>
                   <placeholder/>
@@ -975,12 +1000,19 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid">
+              <object class="GtkGrid" id="result_grid">
+                <property name="name">result_grid</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
                 <property name="hexpand">True</property>
-                <property name="row_spacing">5</property>
+                <property name="vexpand">True</property>
+                <property name="row_spacing">60</property>
                 <property name="column_spacing">5</property>
+                <property name="column_homogeneous">True</property>
                 <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
@@ -990,7 +1022,7 @@
                     <attributes>
                       <attribute name="weight" value="ultrabold"/>
                       <attribute name="stretch" value="expanded"/>
-                      <attribute name="scale" value="1.3999999999999999"/>
+                      <attribute name="scale" value="1.5"/>
                     </attributes>
                   </object>
                   <packing>
@@ -1033,10 +1065,10 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkLabel" id="monthly_payment_label">
+                    <property name="name">monthly_payment_label</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">label</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1044,10 +1076,10 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkLabel" id="overpayment_label">
+                    <property name="name">overpayment_label</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">label</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1055,10 +1087,10 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkLabel" id="total_payment_label">
+                    <property name="name">total_payment_label</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">label</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
