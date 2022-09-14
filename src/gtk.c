@@ -83,11 +83,11 @@ extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
 }
 
 extern void set_graph_size(GtkWidget *widget, gpointer data) {
-  GtkContainer *calc_screen =
+  GtkContainer *graph_box =
       (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
-  const gchar *name = gtk_widget_get_name((GtkWidget *)calc_screen);
-  if (strcmp(name, "calc_screen") == 0)
-    gtk_container_foreach(calc_screen, on_set_graph_size, data);
+  const gchar *name = gtk_widget_get_name((GtkWidget *)graph_box);
+  if (strcmp(name, "graph_box") == 0)
+    gtk_container_foreach(graph_box, on_set_graph_size, data);
   else
     assert(0);
 }
@@ -95,15 +95,15 @@ extern void set_graph_size(GtkWidget *widget, gpointer data) {
 /**
  * @brief Get the graph size from "grap_size box" fields
  * fills data->clip_x1 etc. dimensions of graph in user coordinates
- * @param widget - any "calc_screen" child widget
+ * @param widget - any "graph_box" child widget
  * @param data calc_data structure pointer to fill with coordinates
  */
 extern void get_graph_size(GtkWidget *widget, gpointer data) {
-  GtkContainer *calc_screen =
+  GtkContainer *graph_box =
       (GtkContainer *)gtk_widget_get_parent((GtkWidget *)widget);
-  const gchar *name = gtk_widget_get_name((GtkWidget *)calc_screen);
-  if (strcmp(name, "calc_screen") == 0)
-    gtk_container_foreach(calc_screen, on_get_graph_size, data);
+  const gchar *name = gtk_widget_get_name((GtkWidget *)graph_box);
+  if (strcmp(name, "graph_box") == 0)
+    gtk_container_foreach(graph_box, on_get_graph_size, data);
   else
     assert(0);
 }
@@ -122,14 +122,21 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
   /* Change the transformation matrix */
   // cairo_translate(cr, zx * (dx - fmax(d->clip_x2, d->clip_x1)),
   //                 zy * fmax(d->clip_y2, d->clip_y1)); /* Set 0.0 point */
+  cairo_set_line_width(cr, 0.5);
 
   int x = 0;
+  cairo_font_extents_t fe;
+  cairo_text_extents_t te;
+  cairo_font_extents(cr, &fe);
   for (double i = d->clip_x1; i <= d->clip_x2; i += dx / 10, x += width / 10) {
     cairo_set_source_rgb(cr, 0, 0, 0);
     if (x != 0) {
-      cairo_move_to(cr, x + 5, height - 5);
       char grid[10];
       sprintf(grid, "%.1f", i);
+      cairo_text_extents(cr, grid, &te);
+      // cairo_move_to(cr, x - te.x_bearing - te.width / 2,
+      //               height - 5 - fe.descent + fe.height / 2);
+      cairo_move_to(cr, x + 5, height - 5);
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
         cairo_set_source_rgba(cr, 0, 0, 0, 1);
@@ -151,9 +158,11 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
   for (double i = d->clip_y1; i <= d->clip_y2; i += dy / 10, y -= height / 10) {
     cairo_set_source_rgb(cr, 0, 0, 0);
     if (y != height) {
-      cairo_move_to(cr, 10, y - 5);
       char grid[10];
       sprintf(grid, "%.1f", i);
+      cairo_text_extents(cr, grid, &te);
+      cairo_move_to(cr, 10, y - 5 - fe.descent + fe.height / 2);
+      // cairo_move_to(cr, 10, y + 5);
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
         cairo_set_source_rgba(cr, 0, 0, 0, 1);
@@ -188,114 +197,6 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
   // cairo_line_to(cr, 10, (height / 2) - 20);
   // cairo_stroke(cr);
   cairo_restore(cr);
-}
-
-void draw_grid_old(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
-                   int height) {
-  cairo_save(cr);
-
-  cairo_translate(cr, width / 2, height / 2); /* Set 0.0 point */
-
-  cairo_set_source_rgb(cr, 0, 0, 0);
-  for (double i = -width / 2; i <= width / 2; i += width / 10) {
-    cairo_set_source_rgb(cr, 0, 0, 0);
-
-    cairo_move_to(cr, i, 0);
-    if (i != 0) {
-      cairo_set_source_rgb(cr, 0, 0, 0);
-      cairo_move_to(cr, i - 5, 15);
-      char grid[10];
-      sprintf(grid, "%.1f", i * 0.01);
-      cairo_show_text(cr, grid);
-    }
-  }
-  for (double i = -height / 2; i <= height / 2; i += height / 10) {
-    cairo_set_source_rgb(cr, 0, 0, 0);
-
-    cairo_move_to(cr, 0, i);
-    if (i != 0) {
-      cairo_move_to(cr, 7, i + 5);
-      char grid[10];
-      sprintf(grid, "%.1f", -i * 0.01);
-      cairo_show_text(cr, grid);
-    }
-  }
-  cairo_stroke(cr);
-
-  cairo_scale(cr, 1, -1);
-  cairo_set_source_rgb(cr, 0, 0, 0);
-  cairo_move_to(cr, 0, 0);
-  cairo_move_to(cr, -width / 2, 0);
-  cairo_line_to(cr, width / 2, 0);
-  cairo_move_to(cr, (width / 2) - 20, 10);
-  cairo_line_to(cr, width / 2, 0);
-  cairo_line_to(cr, (width / 2) - 20, -10);
-  cairo_move_to(cr, 0, -height / 2);
-  cairo_line_to(cr, 0, height / 2);
-  cairo_move_to(cr, -10, (height / 2) - 20);
-  cairo_line_to(cr, 0, height / 2);
-  cairo_line_to(cr, 10, (height / 2) - 20);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-}
-
-void draw_grid(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
-               int height) {
-  calc_data *d = data;
-  /* Draws x and y axis */
-  // double dx = 10, dy = 10;
-  cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  cairo_move_to(cr, d->clip_x1, 0.0);
-  cairo_line_to(cr, d->clip_x2, 0.0);
-  cairo_move_to(cr, 0.0, d->clip_y1);
-  cairo_line_to(cr, 0.0, d->clip_y2);
-
-  // cairo_device_to_user_distance(cr, &dx, &dy);
-
-  //  cairo_clip_extents (cr, &clip_x1, &clip_y1, &clip_x2, &clip_y2);
-  // cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-  // cairo_move_to(cr, d->clip_x1 + dx, d->clip_y1);
-  // cairo_line_to(cr, d->clip_x1 + dx, d->clip_y2);
-  // }
-
-  // if (d->clip_y1 < 0 && d->clip_y2 > 0) {
-  // cairo_move_to(cr, d->clip_x1, d->clip_y1 - dy);
-  // cairo_line_to(cr, d->clip_x2, d->clip_y1 - dy);
-  // } else {
-  // cairo_move_to(cr, 50., 0.);
-  // cairo_line_to(cr, 50., 100.);
-  // cairo_restore(cr);
-
-  // }
-  cairo_stroke(cr);
-
-  /*for (double ya = d->clip_y1; ya < d->clip_y2;
-       ya += fabs(d->clip_y2 - d->clip_y1) / 4) {
-    // преобразовывем значение координаты риски в строку
-    char buf[MAXSTR];
-    sprintf(buf, "%.1lf", ya);
-
-    // рисуем текст метки в нужной точке
-
-    cairo_move_to(cr, d->clip_x1, ya);
-    cairo_line_to(cr, d->clip_x1 +, ya);
-
-    // cairo_show_text(cr, buf);
-
-    // задаем зеленый цвет
-    /*
-        cairo_set_source_rgb(cr, 0, 0.5, 0);
-
-        // рисуем линии сетки
-
-        cairo_move_to(cr, 47, ya - 40);
-
-        cairo_line_to(cr, 600, ya - 40);
-
-        cairo_stroke(cr);
-
-        ya -= 40;
-  }*/
 }
 
 extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
@@ -574,6 +475,17 @@ extern void apply_button_clicked(GtkButton *button, gpointer data) {
   gtk_widget_queue_draw((GtkWidget *)graph_area);
 }
 
+extern void graph_button_clicked(GtkButton *button, gpointer data) {
+  calc_data d;
+  GtkWidget *graph_box = data;
+  if (gtk_toggle_button_get_active((GtkToggleButton *)button)) {
+    gtk_widget_hide(graph_box);
+  } else {
+    gtk_widget_show_all(graph_box);
+  }
+  // gtk_widget_queue_draw((GtkWidget *)graph_area);
+}
+
 extern void AC_button_clicked(GtkButton *button, gpointer data) {
   GtkEntry *src_str_entry = data;
   char new_str[MAXSTR] = {0};
@@ -592,7 +504,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v5.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v6.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
