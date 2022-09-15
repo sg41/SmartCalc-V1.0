@@ -23,7 +23,12 @@ typedef struct {
   double monthly_payment;
   double overpayment;
   double total_payment;
+  int type;
+  int round;
 } calc_data;
+
+#define ANNUITET 0
+#define DIFFERENTIATED 1
 
 #define DEFAULT_DURATION 12
 #define DEFAULT_AMOUNT 100000

@@ -3,7 +3,7 @@
 #include "../rpr/expr.h"
 #include "../rpr/llist.h"
 #include "../rpr/stack.h"
-#define EPS 1e-7
+#define EPS 1e-8
 #define MIN_X -1000000
 #define MAX_X 1000000
 #include <float.h>
@@ -551,7 +551,12 @@ double ex10(double x) {
 double ex11(double x) {
   return 13 * cos(x) - 5 * cos(2 * x) - 2 * cos(3 * x) - cos(4 * x);
 }
-char str[11][1000] = {
+double ex12(double x) {
+  return 100000 * (9.5 / 100 / 12 * pow(9.5 / 100 / 12 + 1, 12) /
+                   (pow(1 + 9.5 / 100 / 12, 12) - 1)) +
+         (x - x);
+}
+char str[12][1000] = {
     "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(+x/2)-log(x mod 2)",
     "sin(cos(x^2)^(1*-100))*x",
     "tan(x)^(abs(x))/asin(x^-1)+3.14*ln(x-x/2)",
@@ -564,12 +569,14 @@ char str[11][1000] = {
     "sin(x)+cos(x)-tan(x)*log(x)/ln(x)^atan(x) mod "
     "asin(x)/acos(x)*sqrt(x)+abs(x)",
     " 3.14*sin(x)^2+3.14/2*sin(x)*cos(x)+3.14/4*cos(+x)^2",
-    "13*cos(x)-5*cos(2*x)-2*cos(3*x)-cos(4*x)"};
+    "13*cos(x)-5*cos(2*x)-2*cos(3*x)-cos(4*x)",
+    "100000*(9.5/100/12*(9.5/100/12+1)^12/((1+9.5/100/12)^12-1))"};
 typedef double (*f_ptr)(double x);
-f_ptr functions[11] = {ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex11};
+f_ptr functions[12] = {ex1, ex2, ex3, ex4,  ex5,  ex6,
+                       ex7, ex8, ex9, ex10, ex11, ex12};
 double expected_result, actual_result;
 int good = 0;
-for (int i = 0; i < 11; i++) {
+for (int i = 0; i < 12; i++) {
   D("i:%d func:%s\n", i, str[i]);
   D("GOOD:%d \n", good);
   for (double x = MIN_X; x < MAX_X; x += 100) {
@@ -583,3 +590,14 @@ for (int i = 0; i < 11; i++) {
     }
   }
 }
+
+#test core_credit_calc
+int good;
+double expected_result =
+    100000 * (9.5 / 100 / 12 * pow(9.5 / 100 / 12 + 1, 12) /
+              (pow(1 + 9.5 / 100 / 12, 12) - 1));
+double actual_result = calc(
+    "100000*(9.5/100/12*(9.5/100/12+1)^12/((1+9.5/100/12)^12-1))", 0, &good);
+if (fabs(expected_result - actual_result) > EPS)
+  D("e:%.7f a:%.7f\n", expected_result, actual_result);
+ck_assert(fabs(expected_result - actual_result) < EPS);
