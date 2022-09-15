@@ -511,11 +511,16 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
   gtk_container_foreach(source_grid, get_credit_calc_data, &d);
   char monthly_payment_expr[MAXSTR];
   sprintf(monthly_payment_expr, "%lf*(%lf*(%lf+1)^%d/((1+%lf)^%d-1))", d.amount,
-          d.rate / 12., d.rate / 12., d.duration, d.rate / 12., d.duration);
+          d.rate / 100. / 12., d.rate / 100. / 12., d.duration,
+          d.rate / 100. / 12., d.duration);
   int good = 0;
-  d.monthly_payment = calc(monthly_payment_expr, 0, &good);
-  d.overpayment = d.monthly_payment * d.duration - d.amount;
-  d.total_payment = d.monthly_payment * d.duration;
+  d.monthly_payment = round(calc(monthly_payment_expr, 0, &good));
+  // d.monthly_payment =
+  //     d.amount * (d.rate /100./ 12. * pow(1 + d.rate/100. / 12., d.duration)
+  //     /
+  //                 (pow(1 + d.rate/100. / 12., d.duration) - 1));
+  d.overpayment = round(d.monthly_payment) * d.duration - d.amount;
+  d.total_payment = round(d.monthly_payment) * d.duration;
 
   gtk_container_foreach(result_grid, set_credit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
