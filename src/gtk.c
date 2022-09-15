@@ -15,7 +15,7 @@ char *copy_expr_from_label(char *str, const char *label) {
 
 void gtk_entry_set_double(GtkEntry *entry, double d) {
   char str[MAXSTR] = {0};
-  sprintf(str, "%lf", d);
+  sprintf(str, "%.2lf", d);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
 int gtk_entry_get_double(GtkEntry *entry, double *d) {
@@ -181,21 +181,6 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
     }
   }
   cairo_stroke(cr);
-
-  // cairo_scale(cr, 1, -1);
-  // cairo_set_source_rgb(cr, 0, 0, 0);
-  // cairo_move_to(cr, 0, 0);
-  // cairo_move_to(cr, -width / 2, 0);
-  // cairo_line_to(cr, width / 2, 0);
-  // cairo_move_to(cr, (width / 2) - 20, 10);
-  // cairo_line_to(cr, width / 2, 0);
-  // cairo_line_to(cr, (width / 2) - 20, -10);
-  // cairo_move_to(cr, 0, -height / 2);
-  // cairo_line_to(cr, 0, height / 2);
-  // cairo_move_to(cr, -10, (height / 2) - 20);
-  // cairo_line_to(cr, 0, height / 2);
-  // cairo_line_to(cr, 10, (height / 2) - 20);
-  // cairo_stroke(cr);
   cairo_restore(cr);
 }
 
@@ -415,7 +400,11 @@ extern void set_credit_result(GtkWidget *widget, gpointer data) {
 
   if (d->round) prec = 0;
   if (strcmp(name, "monthly_payment_label") == 0) {
-    sprintf(buf, "%.*lf", prec, d->monthly_payment);
+    if (d->round && d->monthly_payment < 1) {
+      sprintf(buf, "%s", "Incorrect input data");
+    } else {
+      sprintf(buf, "%.*lf", prec, d->monthly_payment);
+    }
     gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
   }
   if (strcmp(name, "overpayment_label") == 0) {
@@ -474,6 +463,7 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
     if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1) {
       d->amount = DEFAULT_AMOUNT;
       d->error = 1;
+      gtk_entry_set_double((GtkEntry *)widget, d->amount);
       strcpy(d->error_message, "Error reading amount");
     }
   }
@@ -491,8 +481,9 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   if (strcmp(name, "rate_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
     if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1) {
-      d->amount = DEFAULT_RATE;
+      d->rate = DEFAULT_RATE;
       d->error = 1;
+      gtk_entry_set_double((GtkEntry *)widget, d->rate);
       strcpy(d->error_message, "Error reading % rate");
     }
   }
@@ -527,13 +518,6 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
             d.amount, d.rate, d.rate, d.duration, d.rate, d.duration);
     int good = 0;
     d.monthly_payment = round(calc(monthly_payment_expr, 0, &good) * 100) / 100;
-    // d.monthly_payment =
-    //     round(d.amount *
-    //           (d.rate / 100. / 12. * pow(1 + d.rate / 100. / 12., d.duration)
-    //           /
-    //            (pow(1 + d.rate / 100. / 12., d.duration) - 1)) *
-    //           100) /
-    //     100;
 
     if (d.round) d.monthly_payment = round(d.monthly_payment);
     d.overpayment = (d.monthly_payment) * d.duration - d.amount;
@@ -542,6 +526,7 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
   }
   gtk_container_foreach(result_grid, set_credit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
+  if (d.error) gtk_widget_queue_draw((GtkWidget *)source_grid);
 }
 
 int check_graph_sizes(calc_data *d) {
