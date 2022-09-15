@@ -17,7 +17,17 @@ typedef struct {
   double clip_y1;
   double clip_x2;
   double clip_y2;
+  double amount;
+  int duration;
+  double rate;
+  double monthly_payment;
+  double overpayment;
+  double total_payment;
 } calc_data;
+
+#define DEFAULT_DURATION 12
+#define DEFAULT_AMOUNT 100000
+#define DEFAULT_RATE 9.5
 
 #ifndef MINX
 #define MINX -3

@@ -823,6 +823,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">end</property>
+                <property name="valign">start</property>
                 <property name="margin_left">5</property>
                 <property name="margin_right">30</property>
                 <property name="margin_top">5</property>
@@ -845,7 +846,8 @@ Duration</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText">
+                  <object class="GtkComboBoxText" id="duration_combo">
+                    <property name="name">duration_combo</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="active">4</property>
@@ -860,8 +862,7 @@ Duration</property>
                       <item id="18" translatable="yes">1.5 year</item>
                     </items>
                     <child internal-child="entry">
-                      <object class="GtkEntry" id="duration_combo">
-                        <property name="name">duration_combo</property>
+                      <object class="GtkEntry">
                         <property name="can_focus">False</property>
                         <property name="text" translatable="yes">1 year</property>
                         <property name="xalign">1</property>
@@ -934,6 +935,7 @@ Duration</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="credit_calc_button_clicked" object="result_grid" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1122,7 +1124,40 @@ Credit amount</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkGrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
         </child>
         <child type="tab">
           <object class="GtkLabel">
