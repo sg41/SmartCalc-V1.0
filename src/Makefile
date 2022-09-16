@@ -73,7 +73,7 @@ check: $(SOURCES) graph.c $(HEADERS) graph.h
 	clang-format -n gtk.c gtk.h
 
 check2: $(SOURCES) graph.c $(HEADERS) graph.h
-	cppcheck --enable=all --suppress=missingIncludeSystem $(ROOT)/src/
+	cppcheck --enable=all --suppress=missingIncludeSystem --suppress=unusedFunction $(ROOT)/src/
 
 .PHONY: all clean rebuild
 
@@ -90,6 +90,9 @@ leaks_test: test_leaks
 
 test_leaks: test
 	$(LEAKS) ./$(TEST_APP) $(APP_ARGS)
+
+gtk_leaks: test
+	$(LEAKS) ./gtk.app
 
 gcov_report: clean $(TEST_C)
 	$(CC) $(CCOPTS) --coverage -c $(SOURCES)

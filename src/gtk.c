@@ -113,7 +113,7 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
   cairo_save(cr);
   calc_data *d = data;
 
-  double zx, zy, dx, dy;
+  double dx, dy;
 
   dx = fabs((d->clip_x2) - (d->clip_x1));
   dy = fabs((d->clip_y2) - (d->clip_y1));
@@ -543,9 +543,12 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
     d.total_payment = (d.monthly_payment) * d.duration;
   } else {  // DIFFERENTIATED
     double *mp = malloc(sizeof(*mp) * d.duration);
+    sprintf(monthly_payment_expr, "%lf/%d+(%lf-(%lf/%d)*x)*(%lf/100/12)",
+            d.amount, d.duration, d.amount, d.amount, d.duration, d.rate);
+    int good;
     for (int m = 0; m < d.duration; m++) {
-      mp[m] = d.amount / d.duration +
-              (d.amount - (d.amount / d.duration) * m) * (d.rate / 100 / 12);
+      mp[m] = calc(monthly_payment_expr, (double)m, &good);
+      assert(good == 1);
       d.total_payment += mp[m];
     }
     d.monthly_payment = mp[0];
@@ -586,7 +589,7 @@ extern void apply_button_clicked(GtkButton *button, gpointer data) {
 }
 
 extern void graph_button_clicked(GtkButton *button, gpointer data) {
-  calc_data d;
+  // calc_data d;
   GtkWidget *graph_box = data;
   if (gtk_toggle_button_get_active((GtkToggleButton *)button)) {
     gtk_widget_hide(graph_box);
@@ -629,6 +632,9 @@ int main(int argc, char *argv[]) {
 
   // Разрешаем отображение
   gtk_widget_show_all(window);
+
+  // освобождение памяти
+  g_object_unref(G_OBJECT(builder));
 
   //Пошла программа
   gtk_main();
