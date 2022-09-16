@@ -117,11 +117,6 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
 
   dx = fabs((d->clip_x2) - (d->clip_x1));
   dy = fabs((d->clip_y2) - (d->clip_y1));
-  zx = width / dx;
-  zy = height / dy;
-  /* Change the transformation matrix */
-  // cairo_translate(cr, zx * (dx - fmax(d->clip_x2, d->clip_x1)),
-  //                 zy * fmax(d->clip_y2, d->clip_y1)); /* Set 0.0 point */
   cairo_set_line_width(cr, 0.5);
 
   int x = 0;
@@ -134,8 +129,6 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
       char grid[10];
       sprintf(grid, "%.1f", i);
       cairo_text_extents(cr, grid, &te);
-      // cairo_move_to(cr, x - te.x_bearing - te.width / 2,
-      //               height - 5 - fe.descent + fe.height / 2);
       cairo_move_to(cr, x + 5, height - 5);
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
@@ -162,7 +155,6 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
       sprintf(grid, "%.1f", i);
       cairo_text_extents(cr, grid, &te);
       cairo_move_to(cr, 10, y - 5 - fe.descent + fe.height / 2);
-      // cairo_move_to(cr, 10, y + 5);
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
         cairo_set_source_rgba(cr, 0, 0, 0, 1);
@@ -234,7 +226,7 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   }
 
   /* Draw the curve */
-  cairo_set_source_rgba(cr, 1, 0.2, 0.2, 0.6);
+  cairo_set_source_rgb(cr, 1, 0, 0);
   cairo_stroke(cr);
 
   return FALSE;
@@ -536,6 +528,8 @@ int check_graph_sizes(calc_data *d) {
   if (d->clip_x2 > VERY_MAX_X || d->clip_x2 < d->clip_x1) res = 0;
   if (d->clip_y1 < VERY_MIN_Y || d->clip_y1 > d->clip_y2) res = 0;
   if (d->clip_y2 > VERY_MAX_Y || d->clip_y2 < d->clip_y1) res = 0;
+  if (fabs(d->clip_y2 - d->clip_y1) < 1) res = 0;
+  if (fabs(d->clip_x2 - d->clip_x1) < 1) res = 0;
   return res;
 }
 

@@ -97,7 +97,6 @@ double calc(char *string, float x, int *good) {
     struct expr *infix;
     *good = 1;
     infix = expr_from_string(string, good);
-    // printf("string: \'%s\', good=%d\n", string, good);
     if (*good) {
       struct expr *postfix;
       postfix = expr_shunt(infix);
