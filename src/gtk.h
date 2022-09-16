@@ -21,6 +21,7 @@ typedef struct {
   int duration;
   double rate;
   double monthly_payment;
+  double monthly_payment_min;
   double overpayment;
   double total_payment;
   int type;

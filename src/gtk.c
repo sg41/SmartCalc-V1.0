@@ -334,6 +334,7 @@ void init_calc_data(calc_data *d) {
   d->duration = 0;
   d->rate = 0;
   d->monthly_payment = 0;
+  d->monthly_payment_min = 0;
   d->overpayment = 0;
   d->total_payment = 0;
   d->type = 0;
@@ -393,19 +394,36 @@ extern void set_credit_result(GtkWidget *widget, gpointer data) {
 
   if (d->round) prec = 0;
   if (strcmp(name, "monthly_payment_label") == 0) {
-    if (d->round && d->monthly_payment < 1) {
-      sprintf(buf, "%s", "Incorrect input data");
+    if (d->type == ANNUITET) {
+      if (d->round && d->monthly_payment < 1) {
+        sprintf(buf, "%s", "Incorrect input data");
+        d->error = 1;
+        strcpy(d->error_message, buf);
+      } else {
+        sprintf(buf, "%.*lf RUB", prec, d->monthly_payment);
+      }
     } else {
-      sprintf(buf, "%.*lf", prec, d->monthly_payment);
+      sprintf(buf, "%.*lf...%.*lf RUB", prec, d->monthly_payment, prec,
+              d->monthly_payment_min);
     }
     gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
   }
   if (strcmp(name, "overpayment_label") == 0) {
-    sprintf(buf, "%.*lf", prec, d->overpayment);
+    sprintf(buf, "%.*lf RUB", prec, d->overpayment);
     gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
   }
   if (strcmp(name, "total_payment_label") == 0) {
-    sprintf(buf, "%.*lf", prec, d->total_payment);
+    sprintf(buf, "%.*lf RUB", prec, d->total_payment);
+    gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
+  }
+  if (strcmp(name, "status_label") == 0) {
+    if (d->error == 1) {
+      sprintf(buf, "%.100s\nreset to defaults", d->error_message);
+    } else if (d->error == 2) {
+      sprintf(buf, "%.100s", d->error_message);
+    } else {
+      sprintf(buf, "%s", "Sucsess!");
+    }
     gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
   }
 }
@@ -453,11 +471,14 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
 
   if (strcmp(name, "amount_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1) {
+    if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1 || d->amount <= 0 ||
+        d->amount > 10000000000) {
       d->amount = DEFAULT_AMOUNT;
       d->error = 1;
       gtk_entry_set_double((GtkEntry *)widget, d->amount);
-      strcpy(d->error_message, "Error reading amount");
+      strcpy(d->error_message,
+             "Error reading amount,\nplease enter values in range "
+             "0-10000000000\n");
     }
   }
   if (strcmp(name, "duration_combo") == 0) {
@@ -473,11 +494,13 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   }
   if (strcmp(name, "rate_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1) {
+    if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1 || d->rate <= 0.01 ||
+        d->rate > 999) {
       d->rate = DEFAULT_RATE;
       d->error = 1;
       gtk_entry_set_double((GtkEntry *)widget, d->rate);
-      strcpy(d->error_message, "Error reading % rate");
+      strcpy(d->error_message,
+             "Error reading % rate\nPlease enter values in range 0.01-999\n");
     }
   }
 }
@@ -511,11 +534,24 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
             d.amount, d.rate, d.rate, d.duration, d.rate, d.duration);
     int good = 0;
     d.monthly_payment = round(calc(monthly_payment_expr, 0, &good) * 100) / 100;
-
+    if (d.round && d.monthly_payment < 1) {
+      d.error = 2;
+      strcpy(d.error_message, "Incorrect input data - can't calculate");
+    }
     if (d.round) d.monthly_payment = round(d.monthly_payment);
     d.overpayment = (d.monthly_payment) * d.duration - d.amount;
     d.total_payment = (d.monthly_payment) * d.duration;
-  } else {
+  } else {  // DIFFERENTIATED
+    double *mp = malloc(sizeof(*mp) * d.duration);
+    for (int m = 0; m < d.duration; m++) {
+      mp[m] = d.amount / d.duration +
+              (d.amount - (d.amount / d.duration) * m) * (d.rate / 100 / 12);
+      d.total_payment += mp[m];
+    }
+    d.monthly_payment = mp[0];
+    d.monthly_payment_min = mp[d.duration - 1];
+    d.overpayment = d.total_payment - d.amount;
+    free(mp);
   }
   gtk_container_foreach(result_grid, set_credit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
