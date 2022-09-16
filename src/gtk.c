@@ -639,5 +639,8 @@ int main(int argc, char *argv[]) {
   //Пошла программа
   gtk_main();
 
+  // освобождение памяти
+  gtk_widget_destroy(window);
+
   return 0;
 }
