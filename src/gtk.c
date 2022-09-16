@@ -222,7 +222,8 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   int good = 0, draw = 0;
   for (x = d.clip_x1; x < d.clip_x2; x += dx) {
     double y = calc(expr, x, &good);
-    if (good && draw && isfinite(y))
+    if (!good) break;
+    if (draw && isfinite(y))
       cairo_line_to(cr, x, y);
     else
       cairo_move_to(cr, x, y);
