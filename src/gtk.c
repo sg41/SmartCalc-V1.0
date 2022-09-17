@@ -721,23 +721,33 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
       strcpy(d.error_message, "Incorrect input data - can't calculate");
     }
     if (d.round) d.interest = round(d.interest);
-    d.tax = (d.interest) * d.tax_rate * (get_days_in_period(d.duration) / 365) /
-            100;
-    d.total_payment = (d.interest) + d.amount;
+    d.tax = (d.interest) * (d.tax_rate / 100);
+    d.total_payment = (d.interest) + d.amount - d.tax;
   } else {  // Complex interest
-    // double *mp = malloc(sizeof(*mp) * d.duration);
-    // sprintf(interest_expr, "%lf/%d+(%lf-(%lf/%d)*x)*(%lf/100/12)", d.amount,
-    //         d.duration, d.amount, d.amount, d.duration, d.rate);
-    // int good;
-    // for (int m = 0; m < d.duration; m++) {
-    //   mp[m] = calc(interest_expr, (double)m, &good);
-    //   assert(good == 1);
-    //   d.total_payment += mp[m];
-    // }
-    // d.monthly_payment = mp[0];
-    // d.monthly_payment_min = mp[d.duration - 1];
-    // d.overpayment = d.total_payment - d.amount;
-    // free(mp);
+    int t, k;
+    switch (d.pay_period) {
+      case 1:
+        t = get_days_in_period(d.duration);
+        k = 365;
+        break;
+      case 30:
+        t = d.duration;
+        k = 12;
+      case 7:
+        t = round(get_days_in_period(d.duration) / 7. + 0.5);
+        k = 52;
+        break;
+
+      default:
+        break;
+    }
+    sprintf(interest_expr, "%lf*((1+(%lf/100)/%d)^%d)", d.amount, d.rate, k, t);
+    int good;
+    d.total_payment = calc(interest_expr, 0, &good);
+    assert(good = 1);
+    d.interest = d.total_payment - d.amount;
+    d.tax = (d.interest) * (d.tax_rate / 100);
+    d.total_payment -= d.tax;
   }
   gtk_container_foreach(result_grid, set_deposit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
