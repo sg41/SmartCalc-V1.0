@@ -3,6 +3,7 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 #include <string.h>
+#include <time.h>
 
 char *copy_expr_from_label(char *str, const char *label) {
   const char *p = strstr(label, " = ");
@@ -441,18 +442,7 @@ extern void set_deposit_result(GtkWidget *widget, gpointer data) {
 
   if (d->round) prec = 0;
   if (strcmp(name, "dep_interest_label") == 0) {
-    // if (d->type == ANNUITET) {
-    //   if (d->round && d->monthly_payment < 1) {
-    //     sprintf(buf, "%s", "Incorrect input data");
-    //     d->error = 1;
-    //     strcpy(d->error_message, buf);
-    //   } else {
     sprintf(buf, "%.*lf RUB", prec, d->interest);
-    //   }
-    // } else {
-    // sprintf(buf, "%.*lf...%.*lf RUB", prec, d->interest, prec,
-    //         d->monthly_payment_min);
-    // }
     gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
   }
   if (strcmp(name, "dep_tax_label") == 0) {
@@ -515,6 +505,7 @@ extern void get_x_value(GtkWidget *widget, gpointer data) {
 extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
+  const gchar *active_id;
 
   if (strcmp(name, "amount_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
@@ -529,12 +520,25 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
     }
   }
   if (strcmp(name, "duration_combo") == 0) {
-    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
-           &(d->duration));
+    active_id = gtk_combo_box_get_active_id((GtkComboBox *)widget);
+    if (active_id != NULL) {
+      sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
+             &(d->duration));
+    } else {
+      d->duration = DEFAULT_DURATION;
+      d->error = 1;
+      strcpy(d->error_message, "Error reading term\nPlease select one\n");
+    }
   }
   if (strcmp(name, "type_combo") == 0) {
-    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
-           &(d->type));
+    active_id = gtk_combo_box_get_active_id((GtkComboBox *)widget);
+    if (active_id != NULL) {
+      sscanf(active_id, "%d", &(d->type));
+    } else {
+      d->type = ANNUITET;
+      d->error = 1;
+      strcpy(d->error_message, "Error reading type\nPlease select one\n");
+    }
   }
   if (strcmp(name, "round_checkbutton") == 0) {
     d->round = gtk_toggle_button_get_active((GtkToggleButton *)widget);
@@ -552,9 +556,24 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   }
 }
 
+void get_combo_value(GtkComboBox *widget, int *value, int def, calc_data *d,
+                     char *err_msg) {
+  const gchar *active_id;
+
+  active_id = gtk_combo_box_get_active_id((GtkComboBox *)widget);
+  if (active_id != NULL) {
+    sscanf(active_id, "%d", value);
+  } else {
+    d->duration = def;
+    d->error = 1;
+    strcpy(d->error_message, err_msg);
+  }
+}
+
 extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
+  const gchar *active_id;
 
   if (strcmp(name, "dep_amount_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
@@ -569,14 +588,14 @@ extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
     }
   }
   if (strcmp(name, "dep_duration_combo") == 0) {
-    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
-           &(d->duration));
+    get_combo_value((GtkComboBox *)widget, &(d->duration), DEFAULT_DURATION, d,
+                    "Error reading term\nPlease select one\n");
   }
   if (strcmp(name, "dep_pay_period_combo") == 0) {
-    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
-           &(d->pay_period));
+    get_combo_value((GtkComboBox *)widget, &(d->pay_period), DEFAULT_PAY_PERIOD,
+                    d, "Error reading pay period\nPlease select one\n");
   }
-  if (strcmp(name, "round_checkbutton") == 0) {
+  if (strcmp(name, "dep_round_checkbutton") == 0) {
     d->round = gtk_toggle_button_get_active((GtkToggleButton *)widget);
   }
   if (strcmp(name, "dep_int_cap_checkbutton") == 0) {
@@ -662,6 +681,27 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
   if (d.error) gtk_widget_queue_draw((GtkWidget *)source_grid);
 }
 
+/**
+ * @brief Get the number of days in the 'period' months from today
+ *
+ * @param period - number of months to add to current date
+ * @return int number of days in 'period' moths from current date
+ */
+int get_days_in_period(int period) {
+  int result = 0;
+  time_t current_time, future_time;
+  /* Obtain current time. */
+  current_time = time(NULL);
+  struct tm current_date = *localtime(&current_time);
+  struct tm future_date = current_date;
+  current_date.tm_year =
+      current_date.tm_year + (current_date.tm_mon + period) / 12;
+  current_date.tm_mon = (current_date.tm_mon + period) % 12;
+  future_time = mktime(&current_date);
+  result = round(difftime(future_time, current_time) / 86400);
+  return result;
+}
+
 extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
   calc_data d;
   GtkContainer *result_grid = data;
@@ -673,7 +713,7 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
   char interest_expr[MAXSTR];
   if (d.int_cap == FALSE) {  // simple interest
     sprintf(interest_expr, "%lf*%lf*(%d/365)/100", d.amount, d.rate,
-            d.duration);
+            get_days_in_period(d.duration));
     int good = 0;
     d.interest = round(calc(interest_expr, 0, &good) * 100) / 100;
     if (d.round && d.interest < 1) {
@@ -681,7 +721,8 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
       strcpy(d.error_message, "Incorrect input data - can't calculate");
     }
     if (d.round) d.interest = round(d.interest);
-    d.tax = (d.interest) * d.tax_rate * (d.duration / 365) / 100;
+    d.tax = (d.interest) * d.tax_rate * (get_days_in_period(d.duration) / 365) /
+            100;
     d.total_payment = (d.interest) + d.amount;
   } else {  // Complex interest
     // double *mp = malloc(sizeof(*mp) * d.duration);

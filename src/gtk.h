@@ -36,6 +36,7 @@ typedef struct {
 #define ANNUITET 0
 #define DIFFERENTIATED 1
 
+#define DEFAULT_PAY_PERIOD 30
 #define DEFAULT_DURATION 12
 #define DEFAULT_AMOUNT 100000
 #define DEFAULT_RATE 9.5
