@@ -332,13 +332,18 @@ void init_calc_data(calc_data *d) {
   d->clip_y2 = 0;
   d->amount = 0;
   d->duration = 0;
+  d->pay_period = 0;
   d->rate = 0;
+  d->tax_rate = 0;
+  d->tax = 0;
   d->monthly_payment = 0;
   d->monthly_payment_min = 0;
   d->overpayment = 0;
+  d->interest = 0;
   d->total_payment = 0;
   d->type = 0;
   d->round = 0;
+  d->int_cap = 0;
 }
 
 extern void calculate(GtkWidget *widget, gpointer data) {
@@ -428,6 +433,48 @@ extern void set_credit_result(GtkWidget *widget, gpointer data) {
   }
 }
 
+extern void set_deposit_result(GtkWidget *widget, gpointer data) {
+  calc_data *d = data;
+  const gchar *name = gtk_widget_get_name(widget);
+  char buf[MAXSTR];
+  int prec = 2;
+
+  if (d->round) prec = 0;
+  if (strcmp(name, "dep_interest_label") == 0) {
+    // if (d->type == ANNUITET) {
+    //   if (d->round && d->monthly_payment < 1) {
+    //     sprintf(buf, "%s", "Incorrect input data");
+    //     d->error = 1;
+    //     strcpy(d->error_message, buf);
+    //   } else {
+    sprintf(buf, "%.*lf RUB", prec, d->interest);
+    //   }
+    // } else {
+    // sprintf(buf, "%.*lf...%.*lf RUB", prec, d->interest, prec,
+    //         d->monthly_payment_min);
+    // }
+    gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
+  }
+  if (strcmp(name, "dep_tax_label") == 0) {
+    sprintf(buf, "%.*lf RUB", prec, d->tax);
+    gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
+  }
+  if (strcmp(name, "total_deposit_label") == 0) {
+    sprintf(buf, "%.*lf RUB", prec, d->total_payment);
+    gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
+  }
+  if (strcmp(name, "dep_status_label") == 0) {
+    if (d->error == 1) {
+      sprintf(buf, "%.100s\nreset to defaults", d->error_message);
+    } else if (d->error == 2) {
+      sprintf(buf, "%.100s", d->error_message);
+    } else {
+      sprintf(buf, "%s", "Sucsess!");
+    }
+    gtk_label_set_text(GTK_LABEL(widget), (const gchar *)buf);
+  }
+}
+
 extern int x_focus_out(GtkWidget *widget, GdkEventFocus event, gpointer data) {
   const char *x_value_str = gtk_entry_get_text((GtkEntry *)widget);
   const char *p = x_value_str;
@@ -505,6 +552,60 @@ extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   }
 }
 
+extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
+  const gchar *name = gtk_widget_get_name(widget);
+  calc_data *d = data;
+
+  if (strcmp(name, "dep_amount_entry") == 0) {
+    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
+    if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1 || d->amount <= 0 ||
+        d->amount > 10000000000) {
+      d->amount = DEFAULT_AMOUNT;
+      d->error = 1;
+      gtk_entry_set_double((GtkEntry *)widget, d->amount);
+      strcpy(d->error_message,
+             "Error reading amount,\nplease enter values in range "
+             "0-10000000000\n");
+    }
+  }
+  if (strcmp(name, "dep_duration_combo") == 0) {
+    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
+           &(d->duration));
+  }
+  if (strcmp(name, "dep_pay_period_combo") == 0) {
+    sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
+           &(d->pay_period));
+  }
+  if (strcmp(name, "round_checkbutton") == 0) {
+    d->round = gtk_toggle_button_get_active((GtkToggleButton *)widget);
+  }
+  if (strcmp(name, "dep_int_cap_checkbutton") == 0) {
+    d->int_cap = gtk_toggle_button_get_active((GtkToggleButton *)widget);
+  }
+  if (strcmp(name, "dep_rate_entry") == 0) {
+    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
+    if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1 || d->rate <= 0.01 ||
+        d->rate > 999) {
+      d->rate = DEFAULT_RATE;
+      d->error = 1;
+      gtk_entry_set_double((GtkEntry *)widget, d->rate);
+      strcpy(d->error_message,
+             "Error reading % rate\nPlease enter values in range 0.01-999\n");
+    }
+  }
+  if (strcmp(name, "dep_tax_rate_entry") == 0) {
+    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
+    if (sscanf(src_str_ptr, "%lf", &(d->tax_rate)) != 1 || d->tax_rate < 0.0 ||
+        d->tax_rate > 100) {
+      d->tax_rate = DEFAULT_RATE;
+      d->error = 1;
+      gtk_entry_set_double((GtkEntry *)widget, d->tax_rate);
+      strcpy(d->error_message,
+             "Error reading tax rate\nPlease enter values in range 0.01-100\n");
+    }
+  }
+}
+
 extern void calc_button_clicked(GtkButton *button, gpointer data) {
   calc_data d;
   GtkContainer *calc_main_box = data;
@@ -557,6 +658,47 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
     free(mp);
   }
   gtk_container_foreach(result_grid, set_credit_result, &d);
+  gtk_widget_queue_draw((GtkWidget *)result_grid);
+  if (d.error) gtk_widget_queue_draw((GtkWidget *)source_grid);
+}
+
+extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
+  calc_data d;
+  GtkContainer *result_grid = data;
+  GtkContainer *source_grid =
+      (GtkContainer *)gtk_widget_get_parent((GtkWidget *)button);
+
+  init_calc_data(&d);
+  gtk_container_foreach(source_grid, get_deposit_calc_data, &d);
+  char interest_expr[MAXSTR];
+  if (d.int_cap == FALSE) {  // simple interest
+    sprintf(interest_expr, "%lf*%lf*(%d/365)/100", d.amount, d.rate,
+            d.duration);
+    int good = 0;
+    d.interest = round(calc(interest_expr, 0, &good) * 100) / 100;
+    if (d.round && d.interest < 1) {
+      d.error = 2;
+      strcpy(d.error_message, "Incorrect input data - can't calculate");
+    }
+    if (d.round) d.interest = round(d.interest);
+    d.tax = (d.interest) * d.tax_rate * (d.duration / 365) / 100;
+    d.total_payment = (d.interest) + d.amount;
+  } else {  // Complex interest
+    // double *mp = malloc(sizeof(*mp) * d.duration);
+    // sprintf(interest_expr, "%lf/%d+(%lf-(%lf/%d)*x)*(%lf/100/12)", d.amount,
+    //         d.duration, d.amount, d.amount, d.duration, d.rate);
+    // int good;
+    // for (int m = 0; m < d.duration; m++) {
+    //   mp[m] = calc(interest_expr, (double)m, &good);
+    //   assert(good == 1);
+    //   d.total_payment += mp[m];
+    // }
+    // d.monthly_payment = mp[0];
+    // d.monthly_payment_min = mp[d.duration - 1];
+    // d.overpayment = d.total_payment - d.amount;
+    // free(mp);
+  }
+  gtk_container_foreach(result_grid, set_deposit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
   if (d.error) gtk_widget_queue_draw((GtkWidget *)source_grid);
 }

@@ -19,13 +19,18 @@ typedef struct {
   double clip_y2;
   double amount;
   int duration;
+  int pay_period;
   double rate;
+  double tax_rate;
   double monthly_payment;
   double monthly_payment_min;
   double overpayment;
+  double tax;
   double total_payment;
+  double interest;
   int type;
   int round;
+  int int_cap;
 } calc_data;
 
 #define ANNUITET 0
