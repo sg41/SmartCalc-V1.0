@@ -741,9 +741,10 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
       default:
         break;
     }
-    sprintf(interest_expr, "%lf*((1+(%lf/100)/%d)^%d)", d.amount, d.rate, k, t);
-    int good;
-    d.total_payment = calc(interest_expr, 0, &good);
+    sprintf(interest_expr, "%lf*((1.+%lf/100./%d)^%d)", d.amount, d.rate, k, t);
+    int good = 1;
+    d.total_payment = d.amount * pow(1. + (d.rate / 100.) / k, (double)t);
+    // d.total_payment = calc(interest_expr, 0, &good);
     assert(good = 1);
     d.interest = d.total_payment - d.amount;
     d.tax = (d.interest) * (d.tax_rate / 100);
