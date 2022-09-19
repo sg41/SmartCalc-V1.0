@@ -24,14 +24,24 @@ SRC_DIR=$(ROOT)/src
 OBJECTS = rpr/llist.o rpr/stack.o rpr/expr.o rpr/core.o
 SOURCES = $(OBJECTS:.o=.c)
 HEADERS = $(OBJECTS:.o=.h)
+DEC_SOURCES = functions/*.c
+DEC_FILES = $(shell cd functions; ls *.c)
+DEC_OBJECTS = $(DEC_FILES:.c=.o)
 
 all:  graph 
+
+s21_decimal.a: clean
+	gcc -c $(CCOPTS) $(DEC_SOURCES) -lm
+	ar rcs libs21_decimal.a $(DEC_OBJECTS)
+	rm -rf $(DEC_OBJECTS)
+	cp libs21_decimal.a s21_decimal.a
+
 
 $(LIB): $(OBJECTS)
 	ar rcs lib$(LIB).a $(OBJECTS)
 
 gtk: gtk.c	$(LIB)
-	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) -l$(LIB) $(LIBS) $(GTK_LIBS)
+	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) -l$(LIB) -ls21_decimal $(LIBS) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
 	[ -d ../build ] || mkdir ../build

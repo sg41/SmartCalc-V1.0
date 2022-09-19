@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "s21_decimal.h"
+
 char *copy_expr_from_label(char *str, const char *label) {
   const char *p = strstr(label, " = ");
   if (p != NULL)
@@ -695,11 +697,93 @@ int get_days_in_period(int period) {
   struct tm current_date = *localtime(&current_time);
   struct tm future_date = current_date;
   current_date.tm_year =
-      current_date.tm_year + (current_date.tm_mon + period) / 12;
+      current_date.tm_year + floor((current_date.tm_mon + period) / 12);
   current_date.tm_mon = (current_date.tm_mon + period) % 12;
   future_time = mktime(&current_date);
   result = round(difftime(future_time, current_time) / 86400);
   return result;
+}
+
+double complex_interest(calc_data *d) {
+  double res;
+  s21_decimal P, N, K, T, D, KT, one, tmp;
+  int days = get_days_in_period(d->duration);
+
+  s21_from_float_to_decimal((float)d->rate, &N);
+  s21_from_float_to_decimal((float)d->amount, &P);
+  s21_from_int_to_decimal(get_days_in_period(d->duration), &T);
+  s21_from_int_to_decimal(get_days_in_period(12), &K);
+  s21_from_int_to_decimal(1, &one);
+
+  s21_from_decimal_to_double(N, &res);
+  printf("N:%lf\n", res);
+  s21_from_decimal_to_double(P, &res);
+  printf("P:%lf\n", res);
+  s21_from_decimal_to_double(K, &res);
+  printf("K:%lf\n", res);
+  s21_div(N, K, &KT);
+  s21_from_decimal_to_double(KT, &res);
+  printf("N/K:%lf\n", res);
+  s21_add(KT, one, &tmp);
+  KT = tmp;
+  s21_from_decimal_to_double(KT, &res);
+  printf("2:%lf\n", res);
+  for (int i = 0; i < days; i++) {
+    s21_mul(KT, KT, &tmp);
+    KT = tmp;
+    s21_from_decimal_to_double(KT, &res);
+    printf("3:%lf\n", res);
+  }
+  s21_mul(KT, P, &tmp);
+  KT = tmp;
+  // s21_from_decimal_to_double(KT, &res);
+  s21_from_decimal_to_double(KT, &res);
+  return res;
+}
+double bank_round(double value) {
+  int result = (int)value;
+  if (value >= 0) {
+    if (value < 2147483647.5) {
+      // result = (int)value;
+      double dif = value - result;
+      if (dif > 0.5 || dif == 0.5 && (result & 1) != 0) result++;
+    }
+  }
+  return result;
+}
+
+double calc_daily_interest(calc_data *d, int days) {
+  double res = 0;
+  for (int i = 0; i < days; i++) {
+    res =
+        bank_round(res * (1 + d->rate / 100. / get_days_in_period(12)) * 100.) /
+        100.;
+  }
+  return res;
+}
+
+double int_calc(calc_data *d) {
+  double res = d->amount;
+  if (d->pay_period >= 30) {
+    for (int i = 0; i < d->duration; i++) {
+      res = bank_round(res * (1 + d->rate / 100. / 12.) * 100.) / 100.;
+    }
+  } else {
+    for (int i = 0; i < get_days_in_period(d->duration) / d->pay_period; i++) {
+      // res = res * (1 + d->rate / 100. / get_days_in_period(12) *
+      // d->pay_period);
+      res = bank_round(
+                res *
+                (1 + d->rate / 100. / get_days_in_period(12) * d->pay_period) *
+                100.) /
+            100.;
+    }
+    res += bank_round(d->amount * d->rate *
+                      ((get_days_in_period(d->duration) % d->pay_period) /
+                       get_days_in_period(12))) /
+           100.;
+  }
+  return res;
 }
 
 extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
@@ -715,12 +799,12 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
     sprintf(interest_expr, "%lf*%lf*(%d/365)/100", d.amount, d.rate,
             get_days_in_period(d.duration));
     int good = 0;
-    d.interest = round(calc(interest_expr, 0, &good) * 100) / 100;
+    d.interest = bank_round(calc(interest_expr, 0, &good) * 100) / 100;
     if (d.round && d.interest < 1) {
       d.error = 2;
       strcpy(d.error_message, "Incorrect input data - can't calculate");
     }
-    if (d.round) d.interest = round(d.interest);
+    if (d.round) d.interest = bank_round(d.interest);
     d.tax = (d.interest) * (d.tax_rate / 100);
     d.total_payment = (d.interest) + d.amount - d.tax;
   } else {  // Complex interest
@@ -728,7 +812,7 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
     switch (d.pay_period) {
       case 1:
         t = get_days_in_period(d.duration);
-        k = 365;
+        k = get_days_in_period(12);
         break;
       case 30:
         t = d.duration;
@@ -743,7 +827,9 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
     }
     sprintf(interest_expr, "%lf*((1.+%lf/100./%d)^%d)", d.amount, d.rate, k, t);
     int good = 1;
-    d.total_payment = d.amount * pow(1. + (d.rate / 100.) / k, (double)t);
+    d.total_payment = int_calc(&d);
+    // d.total_payment =
+    //     d.amount * pow(1. + (d.rate / 100.) / (double)k, (double)t);
     // d.total_payment = calc(interest_expr, 0, &good);
     assert(good = 1);
     d.interest = d.total_payment - d.amount;
