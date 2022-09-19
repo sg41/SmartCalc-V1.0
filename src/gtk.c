@@ -807,7 +807,7 @@ double complex_interest_calc(calc_data *d) {
     rest = term % period;
   }
 
-  for (int i = 0; i < term / period; i++) {
+  for (int i = 0; i < term - rest; i += period) {
     res = bank_round(res * (1. + int_rate / 100. * period / periods_per_year) *
                      100.) /
           100.;
