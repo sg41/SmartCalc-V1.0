@@ -33,6 +33,8 @@ typedef struct {
   int int_cap;
 } calc_data;
 
+#define SECOND_PER_DAY 86400
+
 #define ANNUITET 0
 #define DIFFERENTIATED 1
 

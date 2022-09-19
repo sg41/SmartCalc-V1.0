@@ -696,11 +696,11 @@ int get_days_per_period(int period) {
   current_time = time(NULL);
   struct tm current_date = *localtime(&current_time);
   struct tm future_date = current_date;
-  current_date.tm_year =
+  future_date.tm_year =
       current_date.tm_year + floor((current_date.tm_mon + period) / 12.);
-  current_date.tm_mon = (current_date.tm_mon + period) % 12;
-  future_time = mktime(&current_date);
-  result = round(difftime(future_time, current_time) / 86400 - 0.5);
+  future_date.tm_mon = (current_date.tm_mon + period) % 12;
+  future_time = mktime(&future_date);
+  result = round(difftime(future_time, current_time) / SECOND_PER_DAY);
   // for (int i = current_date.tm_year; i <= future_date.tm_year; i++) {
   //   if (i % 4 == 0) result++;
   // }
@@ -755,6 +755,30 @@ long double bank_round(long double value) {
   return result;
 }
 
+/**
+ * @brief check is any long year in period days from today
+ *
+ * @param days period length in days
+ * @return int 0 if no long years >0 if it is
+ */
+int check_long_year(int days) {
+  int result = 0;
+  time_t current_time, future_time;
+  /* Obtain current time. */
+  current_time = time(NULL);
+  future_time = current_time + days * SECOND_PER_DAY;
+  struct tm current_date = *localtime(&current_time);
+  struct tm future_date = *localtime(&future_time);
+  // future_date.tm_year =
+  //     current_date.tm_year + floor((current_date.tm_mon + period) / 12.);
+  // future_date.tm_mon = (current_date.tm_mon + period) % 12;
+  // future_time = mktime(&future_date);
+  // result = round(difftime(future_time, current_time) / SECOND_PER_DAY );
+  for (int i = current_date.tm_year; i <= future_date.tm_year; i++) {
+    if (i % 4 == 0) result++;
+  }
+  return result;
+}
 long double calc_simple_daily_interest(calc_data *d, long double sum,
                                        int days) {
   long double res;
@@ -762,31 +786,38 @@ long double calc_simple_daily_interest(calc_data *d, long double sum,
   return res;
 }
 
-double int_calc(calc_data *d) {
-  long double res = d->amount;
-  if (d->pay_period >= 30) {
-    for (int i = 0; i < d->duration / (d->pay_period / 30); i++) {
-      res = bank_round(res *
-                       (1.L + (long double)d->rate / 100.L / 12.L *
-                                  ((long double)d->pay_period / 30.L)) *
-                       100.L) /
-            100.;
-    }
-    res += calc_simple_daily_interest(
-        d, res, get_days_per_period(d->duration % (d->pay_period / 30)));
-  } else {
-    for (int i = 0; i < get_days_per_period(d->duration) / d->pay_period; i++) {
-      res = bank_round(res *
-                       (1.L + (long double)d->rate / 100.L /
-                                  (long double)get_days_per_period(12) *
-                                  d->pay_period) *
-                       100.L) /
-            100.L;
-    }
-    res += calc_simple_daily_interest(
-        d, res, get_days_per_period(d->duration) % (d->pay_period));
+double complex_interest_calc(calc_data *d) {
+  double res = d->amount;
+  int period;
+  double int_rate;
+  int term;
+  int periods_per_year;
+  int rest;
+  if (d->pay_period >= 30) {  // in months
+    term = d->duration;
+    periods_per_year = 12;
+    period = d->pay_period / 30;
+    int_rate = d->rate;
+    rest = get_days_per_period(term % period);
+  } else {  // in days
+    term = get_days_per_period(d->duration);
+    periods_per_year = get_days_per_period(12);
+    period = d->pay_period;
+    int_rate = d->rate;
+    rest = term % period;
   }
-  return (double)res;
+
+  for (int i = 0; i < term / period; i++) {
+    res = bank_round(res * (1. + int_rate / 100. * period / periods_per_year) *
+                     100.) /
+          100.;
+    printf("term:%d, ppy: %d, per: %d, rete %lf, rest: %d, res: %lf\n", term,
+           periods_per_year, period, int_rate, rest, res);
+  }
+
+  res += calc_simple_daily_interest(d, res, rest);
+
+  return res;
 }
 
 extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
@@ -818,7 +849,7 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
     d.tax = (d.interest) * (d.tax_rate / 100.);
     d.total_payment = (d.interest) + d.amount - d.tax;
   } else {  // Complex interest
-    d.total_payment = int_calc(&d);
+    d.total_payment = complex_interest_calc(&d);
     d.interest = d.total_payment - d.amount;
     d.tax = (d.interest) * (d.tax_rate / 100.);
     d.total_payment -= d.tax;
