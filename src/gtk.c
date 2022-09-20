@@ -727,42 +727,6 @@ int accurate_days_per_period(int startday, int period) {
   return result;
 }
 
-double complex_interest(calc_data *d) {
-  double res;
-  s21_decimal P, N, K, T, D, KT, one, tmp;
-  int days = get_days_per_period(d->duration);
-
-  s21_from_float_to_decimal((float)d->rate, &N);
-  s21_from_float_to_decimal((float)d->amount, &P);
-  s21_from_int_to_decimal(get_days_per_period(d->duration), &T);
-  s21_from_int_to_decimal(get_days_per_period(12), &K);
-  s21_from_int_to_decimal(1, &one);
-
-  s21_from_decimal_to_double(N, &res);
-  printf("N:%lf\n", res);
-  s21_from_decimal_to_double(P, &res);
-  printf("P:%lf\n", res);
-  s21_from_decimal_to_double(K, &res);
-  printf("K:%lf\n", res);
-  s21_div(N, K, &KT);
-  s21_from_decimal_to_double(KT, &res);
-  printf("N/K:%lf\n", res);
-  s21_add(KT, one, &tmp);
-  KT = tmp;
-  s21_from_decimal_to_double(KT, &res);
-  printf("2:%lf\n", res);
-  for (int i = 0; i < days; i++) {
-    s21_mul(KT, KT, &tmp);
-    KT = tmp;
-    s21_from_decimal_to_double(KT, &res);
-    printf("3:%lf\n", res);
-  }
-  s21_mul(KT, P, &tmp);
-  KT = tmp;
-  // s21_from_decimal_to_double(KT, &res);
-  s21_from_decimal_to_double(KT, &res);
-  return res;
-}
 long double bank_round(long double value) {
   int result = (int)value;
   if (value >= 0) {
@@ -789,23 +753,11 @@ int check_long_year(int days) {
   future_time = current_time + days * SECOND_PER_DAY;
   struct tm current_date = *localtime(&current_time);
   struct tm future_date = *localtime(&future_time);
-  // future_date.tm_year =
-  //     current_date.tm_year + floor((current_date.tm_mon + period) / 12.);
-  // future_date.tm_mon = (current_date.tm_mon + period) % 12;
-  // future_time = mktime(&future_date);
-  // result = round(difftime(future_time, current_time) / SECOND_PER_DAY );
   for (int i = current_date.tm_year; i <= future_date.tm_year; i++) {
     if (i % 4 == 0) result++;
   }
   return result;
 }
-
-// long double calc_simple_daily_interest(calc_data *d, long double sum,
-//                                        int days) {
-//   long double res;
-//   res = bank_round(sum * d->rate * days / get_days_per_period(12)) / 100.;
-//   return res;
-// }
 
 /**
  * @brief return number of days per year for date today+days
@@ -828,37 +780,69 @@ int get_days_per_year(int days) {
   return result;
 }
 
+int has_new_year(int start_day, int end_day) {
+  int result = 0;
+  time_t start_time, future_time;
+  /* Obtain current time. */
+  start_time = time(NULL);
+  start_time += start_day * SECOND_PER_DAY;
+  future_time = start_time + end_day * SECOND_PER_DAY;
+  struct tm start_date = *localtime(&start_time);
+  struct tm future_date = *localtime(&future_time);
+  if (future_date.tm_year != start_date.tm_year) result = 1;
+  return result;
+}
+
+int get_days_until_new_year(int start_day) {
+  int result = 0;
+  time_t start_time, future_time;
+  /* Obtain current time. */
+  start_time = time(NULL);
+  start_time += start_day * SECOND_PER_DAY;
+  struct tm start_date = *localtime(&start_time);
+  struct tm future_date = start_date;
+  future_date.tm_mon = 12;
+  future_date.tm_mday = 31;
+
+  future_time = mktime(&future_date);
+  result = round(difftime(future_time, start_time) / SECOND_PER_DAY);
+  return result;
+}
+
 long double calc_simple_daily_interest(calc_data *d, long double sum,
-                                       int days) {
+                                       int startday, int days) {
   long double res;
-  res = bank_round(sum * d->rate * days / get_days_per_year(days)) / 100.;
+  // if (has_new_year(startday, days)) {
+  //   int d1 = get_days_until_new_year(startday);
+  //   int d2 = days - d1;
+  //   res = bank_round(sum * d->rate * d1 / get_days_per_year(startday + d1)) /
+  //         100.;
+  //   res += bank_round(sum * d->rate * d2 / get_days_per_year(startday + d2))
+  //   /
+  //          100.;
+  // } else {
+  res = bank_round(sum * d->rate * days / get_days_per_year(startday + days)) /
+        100.;
+  // }
   return res;
 }
 
 double complex_interest_calc(calc_data *d) {
   double res = d->amount;
-  int period;
-  double int_rate;
-  int term;
-  int periods_per_year;
-  int rest;
-  term = get_days_per_period(d->duration);
-  periods_per_year = get_days_per_period(12);
-  period = d->pay_period;
-  int_rate = d->rate;
-  rest = term % period;
-  if (d->pay_period >= 30) {  // in months
-  }
+  int term = get_days_per_period(d->duration);
+  int period = d->pay_period;
+  int rest = term % period;
   for (int i = 0; i < term - rest; i += period) {
     if (d->pay_period >= 30)
       period = accurate_days_per_period(i, d->pay_period / 30);
 
-    res += calc_simple_daily_interest(d, res, period);
-    printf("term:%d, ppy: %d, per: %d, rete %lf, rest: %d, res: %lf\n", term,
-           periods_per_year, period, int_rate, rest, res);
+    res += calc_simple_daily_interest(d, res, i, period);
+    // printf("term:%d, ppy: %d, per: %d, rete %lf, rest: %d, res: %lf\n", term,
+    //        periods_per_year, period, int_rate, rest, res);
   }
 
-  if (d->pay_period == 7) res += calc_simple_daily_interest(d, res, rest);
+  if (d->pay_period == 7)
+    res += calc_simple_daily_interest(d, res, term - rest - 1, rest);
 
   return res;
 }
