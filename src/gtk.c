@@ -5,8 +5,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "s21_decimal.h"
-
 char *copy_expr_from_label(char *str, const char *label) {
   const char *p = strstr(label, " = ");
   if (p != NULL)
@@ -136,15 +134,12 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
         cairo_set_source_rgba(cr, 0, 0, 0, 1);
-        cairo_move_to(cr, x, height);
-        cairo_line_to(cr, x, 0);
-        cairo_stroke(cr);
       } else {
         cairo_set_source_rgba(cr, .5, 0.5, 0.5, 0.5);
-        cairo_move_to(cr, x, height);
-        cairo_line_to(cr, x, 0);
-        cairo_stroke(cr);
       }
+      cairo_move_to(cr, x, height);
+      cairo_line_to(cr, x, 0);
+      cairo_stroke(cr);
     } else {
       cairo_move_to(cr, x, height);
       cairo_line_to(cr, x, 0);
@@ -161,15 +156,12 @@ void draw_grid_new(GtkWidget *widget, cairo_t *cr, gpointer data, int width,
       cairo_show_text(cr, grid);
       if (fabs(i) <= EPS) {
         cairo_set_source_rgba(cr, 0, 0, 0, 1);
-        cairo_move_to(cr, 0, y);
-        cairo_line_to(cr, width, y);
-        cairo_stroke(cr);
       } else {
         cairo_set_source_rgba(cr, .5, 0.5, 0.5, 0.5);
-        cairo_move_to(cr, 0, y);
-        cairo_line_to(cr, width, y);
-        cairo_stroke(cr);
       }
+      cairo_move_to(cr, 0, y);
+      cairo_line_to(cr, width, y);
+      cairo_stroke(cr);
     } else {
       cairo_move_to(cr, 0, y);
       cairo_line_to(cr, width, y);
@@ -372,7 +364,6 @@ extern void calculate(GtkWidget *widget, gpointer data) {
       strcpy(d->str, res_str);
     }
     gtk_entry_set_text((GtkEntry *)widget, res_str);
-    // gtk_editable_select_region((GtkEditable *)widget, 0, -1);
     gtk_editable_set_position((GtkEditable *)widget, -1);
 
     expr_destroy(&infix);
@@ -771,7 +762,6 @@ int get_days_per_year(int days) {
   /* Obtain current time. */
   current_time = time(NULL);
   future_time = current_time + days * SECOND_PER_DAY;
-  // struct tm current_date = *localtime(&current_time);
   struct tm future_date = *localtime(&future_time);
   if (future_date.tm_year % 4 == 0)
     result = 366;
@@ -812,18 +802,8 @@ int get_days_until_new_year(int start_day) {
 long double calc_simple_daily_interest(calc_data *d, long double sum,
                                        int startday, int days) {
   long double res;
-  // if (has_new_year(startday, days)) {
-  //   int d1 = get_days_until_new_year(startday);
-  //   int d2 = days - d1;
-  //   res = bank_round(sum * d->rate * d1 / get_days_per_year(startday + d1)) /
-  //         100.;
-  //   res += bank_round(sum * d->rate * d2 / get_days_per_year(startday + d2))
-  //   /
-  //          100.;
-  // } else {
   res = bank_round(sum * d->rate * days / get_days_per_year(startday + days)) /
         100.;
-  // }
   return res;
 }
 
@@ -837,8 +817,6 @@ double complex_interest_calc(calc_data *d) {
       period = accurate_days_per_period(i, d->pay_period / 30);
 
     res += calc_simple_daily_interest(d, res, i, period);
-    // printf("term:%d, ppy: %d, per: %d, rete %lf, rest: %d, res: %lf\n", term,
-    //        periods_per_year, period, int_rate, rest, res);
   }
 
   if (d->pay_period == 7)
@@ -914,7 +892,6 @@ extern void apply_button_clicked(GtkButton *button, gpointer data) {
 }
 
 extern void graph_button_clicked(GtkButton *button, gpointer data) {
-  // calc_data d;
   GtkWidget *graph_box = data;
   if (gtk_toggle_button_get_active((GtkToggleButton *)button)) {
     gtk_widget_hide(graph_box);
