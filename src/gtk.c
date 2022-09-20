@@ -575,7 +575,7 @@ void get_combo_value(GtkComboBox *widget, int *value, int def, calc_data *d,
 extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
-  const gchar *active_id;
+  // const gchar *active_id;
 
   if (strcmp(name, "dep_amount_entry") == 0) {
     const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
@@ -771,7 +771,7 @@ int get_days_per_year(int days) {
   /* Obtain current time. */
   current_time = time(NULL);
   future_time = current_time + days * SECOND_PER_DAY;
-  struct tm current_date = *localtime(&current_time);
+  // struct tm current_date = *localtime(&current_time);
   struct tm future_date = *localtime(&future_time);
   if (future_date.tm_year % 4 == 0)
     result = 366;
@@ -855,8 +855,8 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
 
   init_calc_data(&d);
   gtk_container_foreach(source_grid, get_deposit_calc_data, &d);
-  char interest_expr[MAXSTR];
   if (d.int_cap == FALSE) {  // simple interest
+    char interest_expr[MAXSTR];
     sprintf(interest_expr, "%lf*%lf*(%d/%d)/100.", d.amount, d.rate,
             get_days_per_period(d.duration), get_days_per_period(12));
     int good = 0;
@@ -941,7 +941,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v7.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v8.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
