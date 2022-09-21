@@ -3,7 +3,7 @@
 #include "../rpr/expr.h"
 #include "../rpr/llist.h"
 #include "../rpr/stack.h"
-#define EPS 1e-7
+#define EPS 1e-6
 #define MIN_X -1000000
 #define MAX_X 1000000
 #include <float.h>
@@ -441,14 +441,16 @@ for (int i = 0; i < 10; i++) {
   e = expr_from_string(str[i], &good);
   r = expr_shunt(e);
   D("i:%d func:%s\n", i, str[i]);
-  for (double x = MIN_X; x < MAX_X; x += 100) {
+  for (double x = MIN_X; x <= MAX_X; x += 100) {
     actual_result = rpn_reduce(r, x);
     expected_result = functions[i](x);
-    if (!isnan(actual_result) && !isnan(expected_result) &&
-        !isinf(expected_result) && !isinf(actual_result)) {
-      if (fabs(expected_result - actual_result) > EPS)
+    if (isfinite(expected_result)) {
+      if (fabs(expected_result - actual_result) >= EPS ||
+          !isfinite(actual_result))
         D("e:%f a:%f\n", expected_result, actual_result);
       ck_assert(fabs(expected_result - actual_result) < EPS);
+    } else {
+      ck_assert(!isfinite(actual_result));
     }
   }
   expr_destroy(&e);
@@ -488,7 +490,9 @@ double ex10(double x) {
 double ex11(double x) {
   return 13 * cos(x) - 5 * cos(2 * x) - 2 * cos(3 * x) - cos(4 * x);
 }
-char str[11][1000] = {
+double ex12(double x) { return pow(-27, 1. / 3.) + x - x; }
+#define __N__ 12
+char str[__N__][1000] = {
     "sin(cos(x^2)^(1*-100))*x   *tan(X)+sqrt(+x/2)-log(x mod 2)",
     "sin(cos(x^2)^(1*-100))*x",
     "tan(x)^(abs(x))/asin(x^-1)+3.14*ln(x-x/2)",
@@ -501,30 +505,35 @@ char str[11][1000] = {
     "sin(x)+cos(x)-tan(x)*log(x)/ln(x)^atan(x) mod "
     "asin(x)/acos(x)*sqrt(x)+abs(x)",
     " 3.14*sin(x)^2+3.14/2*sin(x)*cos(x)+3.14/4*cos(+x)^2",
-    "13*cos(x)-5*cos(2*x)-2*cos(3*x)-cos(4*x)"};
+    "13*cos(x)-5*cos(2*x)-2*cos(3*x)-cos(4*x)",
+    "-27^(1/3)"};
 typedef double (*f_ptr)(double x);
-f_ptr functions[11] = {ex1, ex2, ex3, ex4, ex5, ex6, ex7, ex8, ex9, ex10, ex11};
+f_ptr functions[__N__] = {ex1, ex2, ex3, ex4,  ex5,  ex6,
+                          ex7, ex8, ex9, ex10, ex11, ex12};
 struct expr *e, *r;
 double expected_result, actual_result;
 int good = 0;
-for (int i = 0; i < 11; i++) {
+for (int i = 0; i < __N__; i++) {
   D("i:%d func:%s\n", i, str[i]);
   e = expr_from_string(str[i], &good);
   r = expr_shunt(e);
   D("GOOD:%d \n", good);
-  for (double x = MIN_X; x < MAX_X; x += 100) {
+  for (double x = MIN_X; x <= MAX_X; x += 100) {
     actual_result = rpn_reduce(r, x);
     expected_result = functions[i](x);
-    if (!isnan(actual_result) && !isnan(expected_result) &&
-        !isinf(expected_result) && !isinf(actual_result)) {
-      if (fabs(expected_result - actual_result) > EPS)
+    if (isfinite(expected_result)) {
+      if (fabs(expected_result - actual_result) >= EPS ||
+          !isfinite(actual_result))
         D("e:%.7f a:%.7f\n", expected_result, actual_result);
       ck_assert(fabs(expected_result - actual_result) < EPS);
+    } else {
+      ck_assert(!isfinite(actual_result));
     }
   }
   expr_destroy(&r);
   expr_destroy(&e);
 }
+#undef __N__
 
 #test core_calc
 double ex1(double x) {
@@ -587,14 +596,16 @@ int good = 0;
 for (int i = 0; i < 12; i++) {
   D("i:%d func:%s\n", i, str[i]);
   D("GOOD:%d \n", good);
-  for (double x = MIN_X; x < MAX_X; x += 100) {
+  for (double x = MIN_X; x <= MAX_X; x += 100) {
     actual_result = calc(str[i], x, &good);
     expected_result = functions[i](x);
-    if (!isnan(actual_result) && !isnan(expected_result) &&
-        !isinf(expected_result) && !isinf(actual_result)) {
-      if (fabs(expected_result - actual_result) > EPS)
+    if (isfinite(expected_result)) {
+      if (fabs(expected_result - actual_result) >= EPS ||
+          !isfinite(actual_result))
         D("e:%.7f a:%.7f\n", expected_result, actual_result);
       ck_assert(fabs(expected_result - actual_result) < EPS);
+    } else {
+      ck_assert(!isfinite(actual_result));
     }
   }
 }
@@ -613,6 +624,5 @@ ck_assert(fabs(expected_result - actual_result) < EPS);
 #test core_calc_nan
 int good;
 int expected_result = 0;
-
 calc("tan(-nan)", 0, &good);
 ck_assert_int_eq(expected_result, good);

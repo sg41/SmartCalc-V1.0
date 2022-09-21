@@ -34,7 +34,7 @@
 #define DIV_SCORE 4
 #define FUNC_SCORE 10
 #define EXP_SCORE 6
-#define U_SCORE 10
+#define U_SCORE 8
 #define L_SCORE 12
 #define R_SCORE 12
 
