@@ -216,6 +216,16 @@ int check_syntax(struct ll_node *last, struct ll_node *before) {
     good = 0;
 
   if (before->state == OPERATOR && last->state == R_BRACKET) good = 0;
+  if (before->state == R_BRACKET &&
+      (last->state != OPERATOR && last->state != R_BRACKET))
+    good = 0;
+
+  if (before->state == OPERAND && last->state == VARIABLE) good = 0;
+  if (before->state == VARIABLE && last->state == OPERAND) good = 0;
+
+  if (before->state != OPERATOR && before->state != UNARYOPERATOR &&
+      before->state != L_BRACKET && last->state == FUNCTION)
+    good = 0;
 
   return good;
 }

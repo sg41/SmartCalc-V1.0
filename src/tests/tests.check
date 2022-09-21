@@ -282,7 +282,7 @@ expr_destroy(&e);
 expr_destroy(&r);
 
 #test expr_wrong_formula
-#define __N__ 15
+#define __N__ 21
 char str[__N__][1000] = {
     "sinus(X)",
     "sin(eX) ",
@@ -299,10 +299,17 @@ char str[__N__][1000] = {
     ")X(",
     " ",
     "русский язык рулит",
-    "tan(-nan)"};
+    "tan(-nan)",
+    "1.999x",
+    "xsin(x)",
+    "sin(x)1",
+    "sin(x)x",
+    "1cos(x)",
+    "sin(x)cos(x)"};
 
 struct expr *e;
-uint expected_result[__N__] = {1, 3, 1, 1, 1, 2, 1, 6, 3, 3, 1, 1, 1, 1, 4},
+uint expected_result[__N__] = {1, 3, 1, 1, 1, 2, 1, 6, 3, 3, 1,
+                               1, 1, 1, 4, 2, 2, 5, 5, 2, 5},
      actual_result;
 int res = 0;
 // expected_result[1] = 3;
@@ -608,7 +615,4 @@ int good;
 int expected_result = 0;
 
 calc("tan(-nan)", 0, &good);
-// if (fabs(expected_result - actual_result) > EPS)
-//   D("e:%.7f a:%.7f\n", expected_result, actual_result);
-// ck_assert(fabs(expected_result - actual_result) < EPS);
 ck_assert_int_eq(expected_result, good);

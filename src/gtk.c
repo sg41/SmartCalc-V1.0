@@ -512,7 +512,7 @@ void get_combo_value(GtkComboBox *widget, int *value, int def, calc_data *d,
 extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
-  const gchar *active_id;
+  // const gchar *active_id;
 
   if (strcmp(name, "amount_entry") == 0) {
     get_entry_value(widget, &d->amount, 0.01, 10000000000., DEFAULT_AMOUNT, d,
