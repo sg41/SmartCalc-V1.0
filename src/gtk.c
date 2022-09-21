@@ -215,11 +215,11 @@ extern gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data) {
   for (x = d.clip_x1; x < d.clip_x2; x += dx) {
     double y = calc(expr, x, &good);
     if (!good) break;
-    if (draw && isfinite(y))
+    if (draw && isfinite(y) && cairo_in_clip(cr, x, y))
       cairo_line_to(cr, x, y);
     else
       cairo_move_to(cr, x, y);
-    if (isfinite(y))
+    if (cairo_in_clip(cr, x, y))
       draw = 1;
     else
       draw = 0;
@@ -870,39 +870,38 @@ extern void exit_button_clicked(GtkWidget *widget, gpointer data) {
 
 extern void on_cellrendererspin_edited(GtkCellRendererText *renderer,
                                        gchar *path, gchar *new_text,
-                                       gpointer data, int index) {
-  if (g_ascii_strcasecmp(new_text, "") != 0) {
+                                       gpointer data, int index, int min,
+                                       int max) {
+  int res = atoi(new_text);
+  if (res >= min && res <= max) {
     GtkTreeIter iter;
     GtkTreeModel *model;
     GtkTreeView *replenishments_tree_view = (GtkTreeView *)data;
-    // (GtkTreeView *)gtk_widget_get_parent(
-    //     gtk_widget_get_parent((GtkWidget *)renderer));
     model = gtk_tree_view_get_model(replenishments_tree_view);
     if (gtk_tree_model_get_iter_from_string(model, &iter, path))
-      gtk_list_store_set(GTK_LIST_STORE(model), &iter, index, atoi(new_text),
-                         -1);
+      gtk_list_store_set(GTK_LIST_STORE(model), &iter, index, res, -1);
   }
 }
 
 extern void on_cellrendererspin_edited0(GtkCellRendererText *renderer,
                                         gchar *path, gchar *new_text,
                                         gpointer data) {
-  on_cellrendererspin_edited(renderer, path, new_text, data, 0);
+  on_cellrendererspin_edited(renderer, path, new_text, data, 0, 1, 31);
 }
 extern void on_cellrendererspin_edited1(GtkCellRendererText *renderer,
                                         gchar *path, gchar *new_text,
                                         gpointer data) {
-  on_cellrendererspin_edited(renderer, path, new_text, data, 1);
+  on_cellrendererspin_edited(renderer, path, new_text, data, 1, 1, 12);
 }
 extern void on_cellrendererspin_edited2(GtkCellRendererText *renderer,
                                         gchar *path, gchar *new_text,
                                         gpointer data) {
-  on_cellrendererspin_edited(renderer, path, new_text, data, 2);
+  on_cellrendererspin_edited(renderer, path, new_text, data, 2, 2022, 2027);
 }
 extern void on_cellrendererspin_edited3(GtkCellRendererText *renderer,
                                         gchar *path, gchar *new_text,
                                         gpointer data) {
-  on_cellrendererspin_edited(renderer, path, new_text, data, 3);
+  on_cellrendererspin_edited(renderer, path, new_text, data, 3, 0, 1000000);
 }
 
 int main(int argc, char *argv[]) {
@@ -913,7 +912,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v10.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v8.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
