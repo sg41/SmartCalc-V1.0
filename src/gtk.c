@@ -19,6 +19,7 @@ void gtk_entry_set_double(GtkEntry *entry, double d) {
   sprintf(str, "%.2lf", d);
   gtk_entry_set_text(GTK_ENTRY(entry), str);
 }
+
 int gtk_entry_get_double(GtkEntry *entry, double *d) {
   const gchar *p;
   int res = 1;
@@ -28,6 +29,18 @@ int gtk_entry_get_double(GtkEntry *entry, double *d) {
     res = 0;
   }
   return res;
+}
+
+void get_entry_value(GtkWidget *widget, double *value, double min, double max,
+                     double def, calc_data *d, char *err_msg) {
+  int res = gtk_entry_get_double((GtkEntry *)widget, value);
+
+  if (res == 0 || *value < min || *value > max) {
+    *value = def;
+    d->error = 1;
+    gtk_entry_set_double((GtkEntry *)widget, *value);
+    strcpy(d->error_message, err_msg);
+  }
 }
 
 extern void on_set_graph_size(GtkWidget *widget, gpointer data) {
@@ -58,36 +71,20 @@ extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
     gtk_container_foreach(GTK_CONTAINER(widget), on_get_graph_size, data);
   }
   if (strcmp(name, "min_x") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1) == 0 ||
-        d->clip_x1 < VERY_MIN_X) {
-      d->clip_x1 = MINX;
-      d->error = 1;
-      strcpy(d->error_message, "Can't read min x");
-    }
+    get_entry_value(widget, &d->clip_x1, VERY_MIN_X, VERY_MAX_X, MINX, d,
+                    "Can't read min x");
   }
   if (strcmp(name, "max_x") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2) == 0 ||
-        d->clip_x2 > VERY_MAX_X) {
-      d->clip_x2 = MAXX;
-      d->error = 1;
-      strcpy(d->error_message, "Can't read max x");
-    }
+    get_entry_value(widget, &d->clip_x2, VERY_MIN_X, VERY_MAX_X, MAXX, d,
+                    "Can't read max x");
   }
   if (strcmp(name, "min_y") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1) == 0 ||
-        d->clip_y1 < VERY_MIN_Y) {
-      d->clip_y1 = MINY;
-      d->error = 1;
-      strcpy(d->error_message, "Can't read min y");
-    }
+    get_entry_value(widget, &d->clip_y1, VERY_MIN_Y, VERY_MAX_Y, MINY, d,
+                    "Can't read min y");
   }
   if (strcmp(name, "max_y") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2) == 0 ||
-        d->clip_y2 > VERY_MAX_Y) {
-      d->clip_y2 = MAXY;
-      d->error = 1;
-      strcpy(d->error_message, "Can't read max y");
-    }
+    get_entry_value(widget, &d->clip_y2, VERY_MIN_Y, VERY_MAX_Y, MAXY, d,
+                    "Can't read max y");
   }
 }
 
@@ -493,67 +490,8 @@ extern void get_x_value(GtkWidget *widget, gpointer data) {
   calc_data *d = data;
 
   if (strcmp(name, "X_value_entry") == 0) {
-    d->x = 0;
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->x)) != 1) {
-      d->x = 0;
-      d->error = 1;
-      strcpy(d->error_message, "Error reading X value");
-    }
-  }
-}
-
-extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
-  const gchar *name = gtk_widget_get_name(widget);
-  calc_data *d = data;
-  const gchar *active_id;
-
-  if (strcmp(name, "amount_entry") == 0) {
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1 || d->amount <= 0 ||
-        d->amount > 10000000000) {
-      d->amount = DEFAULT_AMOUNT;
-      d->error = 1;
-      gtk_entry_set_double((GtkEntry *)widget, d->amount);
-      strcpy(d->error_message,
-             "Error reading amount,\nplease enter values in range "
-             "0-10000000000\n");
-    }
-  }
-  if (strcmp(name, "duration_combo") == 0) {
-    active_id = gtk_combo_box_get_active_id((GtkComboBox *)widget);
-    if (active_id != NULL) {
-      sscanf(gtk_combo_box_get_active_id((GtkComboBox *)widget), "%d",
-             &(d->duration));
-    } else {
-      d->duration = DEFAULT_DURATION;
-      d->error = 1;
-      strcpy(d->error_message, "Error reading term\nPlease select one\n");
-    }
-  }
-  if (strcmp(name, "type_combo") == 0) {
-    active_id = gtk_combo_box_get_active_id((GtkComboBox *)widget);
-    if (active_id != NULL) {
-      sscanf(active_id, "%d", &(d->type));
-    } else {
-      d->type = ANNUITET;
-      d->error = 1;
-      strcpy(d->error_message, "Error reading type\nPlease select one\n");
-    }
-  }
-  if (strcmp(name, "round_checkbutton") == 0) {
-    d->round = gtk_toggle_button_get_active((GtkToggleButton *)widget);
-  }
-  if (strcmp(name, "rate_entry") == 0) {
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1 || d->rate <= 0.01 ||
-        d->rate > 999) {
-      d->rate = DEFAULT_RATE;
-      d->error = 1;
-      gtk_entry_set_double((GtkEntry *)widget, d->rate);
-      strcpy(d->error_message,
-             "Error reading % rate\nPlease enter values in range 0.01-999\n");
-    }
+    get_entry_value(widget, &d->x, VERY_MIN_X, VERY_MAX_X, 0, d,
+                    "Can't read X value");
   }
 }
 
@@ -565,28 +503,48 @@ void get_combo_value(GtkComboBox *widget, int *value, int def, calc_data *d,
   if (active_id != NULL) {
     sscanf(active_id, "%d", value);
   } else {
-    d->duration = def;
+    *value = def;
     d->error = 1;
     strcpy(d->error_message, err_msg);
+  }
+}
+
+extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
+  const gchar *name = gtk_widget_get_name(widget);
+  calc_data *d = data;
+  const gchar *active_id;
+
+  if (strcmp(name, "amount_entry") == 0) {
+    get_entry_value(widget, &d->amount, 0.01, 10000000000., DEFAULT_AMOUNT, d,
+                    "Error reading amount,\nplease enter values in range "
+                    "0-10000000000\n");
+  }
+  if (strcmp(name, "duration_combo") == 0) {
+    get_combo_value((GtkComboBox *)widget, &(d->duration), DEFAULT_DURATION, d,
+                    "Error reading term\nPlease select one\n");
+  }
+  if (strcmp(name, "type_combo") == 0) {
+    get_combo_value((GtkComboBox *)widget, &(d->type), ANNUITET, d,
+                    "Error reading type\nPlease select one\n");
+  }
+  if (strcmp(name, "round_checkbutton") == 0) {
+    d->round = gtk_toggle_button_get_active((GtkToggleButton *)widget);
+  }
+  if (strcmp(name, "rate_entry") == 0) {
+    get_entry_value(
+        widget, &d->rate, 0.01, 999., 9.5, d,
+        "Error reading % rate\nPlease enter values in range 0.01-999\n");
   }
 }
 
 extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
-  // const gchar *active_id;
 
   if (strcmp(name, "dep_amount_entry") == 0) {
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->amount)) != 1 || d->amount <= 0 ||
-        d->amount > 10000000000) {
-      d->amount = DEFAULT_AMOUNT;
-      d->error = 1;
-      gtk_entry_set_double((GtkEntry *)widget, d->amount);
-      strcpy(d->error_message,
-             "Error reading amount,\nplease enter values in range "
-             "0-10000000000\n");
-    }
+    get_entry_value(widget, &d->amount, 0.01, 10000000000., 700000, d,
+                    "Error reading amount,\nplease enter values in range "
+                    "0-10000000000\n");
   }
   if (strcmp(name, "dep_duration_combo") == 0) {
     get_combo_value((GtkComboBox *)widget, &(d->duration), DEFAULT_DURATION, d,
@@ -603,27 +561,28 @@ extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
     d->int_cap = gtk_toggle_button_get_active((GtkToggleButton *)widget);
   }
   if (strcmp(name, "dep_rate_entry") == 0) {
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->rate)) != 1 || d->rate <= 0.01 ||
-        d->rate > 999) {
-      d->rate = DEFAULT_RATE;
-      d->error = 1;
-      gtk_entry_set_double((GtkEntry *)widget, d->rate);
-      strcpy(d->error_message,
-             "Error reading % rate\nPlease enter values in range 0.01-999\n");
-    }
+    get_entry_value(
+        widget, &d->rate, 0.01, 999., 8, d,
+        "Error reading % rate\nPlease enter values in range 0.01-999\n");
   }
   if (strcmp(name, "dep_tax_rate_entry") == 0) {
-    const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-    if (sscanf(src_str_ptr, "%lf", &(d->tax_rate)) != 1 || d->tax_rate < 0.0 ||
-        d->tax_rate > 100) {
-      d->tax_rate = DEFAULT_RATE;
-      d->error = 1;
-      gtk_entry_set_double((GtkEntry *)widget, d->tax_rate);
-      strcpy(d->error_message,
-             "Error reading tax rate\nPlease enter values in range 0.01-100\n");
-    }
+    get_entry_value(
+        widget, &d->tax_rate, 0.00, 100., 0, d,
+        "Error reading tax rate\nPlease enter values in range 0.01-100\n");
   }
+  // if (strcmp(name, "replenishments_tree_view") == 0) {
+  //   const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
+  //   if (sscanf(src_str_ptr, "%lf", &(d->tax_rate)) != 1 || d->tax_rate < 0.0
+  //   ||
+  //       d->tax_rate > 100) {
+  //     d->tax_rate = DEFAULT_RATE;
+  //     d->error = 1;
+  //     gtk_entry_set_double((GtkEntry *)widget, d->tax_rate);
+  //     strcpy(d->error_message,
+  //            "Error reading tax rate\nPlease enter values in range
+  //            0.01-100\n");
+  //   }
+  // }
 }
 
 extern void calc_button_clicked(GtkButton *button, gpointer data) {
