@@ -109,8 +109,9 @@
                             <property name="name">min_x</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="max_length">9</property>
                             <property name="width_chars">9</property>
-                            <property name="max_width_chars">8</property>
+                            <property name="max_width_chars">9</property>
                             <property name="text" translatable="yes">-3</property>
                             <property name="input_purpose">number</property>
                             <property name="input_hints">GTK_INPUT_HINT_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
@@ -139,8 +140,9 @@
                             <property name="name">max_x</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="max_length">9</property>
                             <property name="width_chars">9</property>
-                            <property name="max_width_chars">8</property>
+                            <property name="max_width_chars">9</property>
                             <property name="text" translatable="yes">3</property>
                             <property name="input_purpose">number</property>
                             <property name="input_hints">GTK_INPUT_HINT_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
@@ -169,8 +171,9 @@
                             <property name="name">min_y</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="max_length">9</property>
                             <property name="width_chars">9</property>
-                            <property name="max_width_chars">8</property>
+                            <property name="max_width_chars">9</property>
                             <property name="text" translatable="yes">-3</property>
                             <property name="input_purpose">number</property>
                             <property name="input_hints">GTK_INPUT_HINT_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
@@ -199,8 +202,9 @@
                             <property name="name">max_y</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="max_length">9</property>
                             <property name="width_chars">9</property>
-                            <property name="max_width_chars">8</property>
+                            <property name="max_width_chars">9</property>
                             <property name="text" translatable="yes">3</property>
                             <property name="input_purpose">number</property>
                             <property name="input_hints">GTK_INPUT_HINT_SPELLCHECK | GTK_INPUT_HINT_NONE</property>
@@ -957,6 +961,9 @@ Term</property>
                     <property name="name">amount_entry</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="max_length">20</property>
+                    <property name="width_chars">20</property>
+                    <property name="max_width_chars">20</property>
                     <property name="text" translatable="yes">100000</property>
                     <property name="xalign">1</property>
                     <property name="input_purpose">digits</property>
@@ -1216,7 +1223,8 @@ Type</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="deposit_calc_box">
+            <property name="name">deposit_calc_box</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -1272,6 +1280,9 @@ Type</property>
                     <property name="name">dep_rate_entry</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="max_length">6</property>
+                    <property name="width_chars">6</property>
+                    <property name="max_width_chars">6</property>
                     <property name="text" translatable="yes">8</property>
                     <property name="xalign">1</property>
                     <property name="input_purpose">digits</property>
@@ -1313,6 +1324,9 @@ Type</property>
                     <property name="name">dep_amount_entry</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="max_length">20</property>
+                    <property name="width_chars">20</property>
+                    <property name="max_width_chars">20</property>
                     <property name="text" translatable="yes">700000</property>
                     <property name="xalign">1</property>
                     <property name="input_purpose">digits</property>
@@ -1413,6 +1427,9 @@ Deposit amount</property>
                     <property name="name">dep_tax_rate_entry</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="max_length">5</property>
+                    <property name="width_chars">5</property>
+                    <property name="max_width_chars">5</property>
                     <property name="text" translatable="yes">0</property>
                     <property name="xalign">1</property>
                     <property name="input_purpose">digits</property>

@@ -58,25 +58,33 @@ extern void on_get_graph_size(GtkWidget *widget, gpointer data) {
     gtk_container_foreach(GTK_CONTAINER(widget), on_get_graph_size, data);
   }
   if (strcmp(name, "min_x") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1) == 0) {
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x1) == 0 ||
+        d->clip_x1 < VERY_MIN_X) {
+      d->clip_x1 = MINX;
       d->error = 1;
       strcpy(d->error_message, "Can't read min x");
     }
   }
   if (strcmp(name, "max_x") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2) == 0) {
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_x2) == 0 ||
+        d->clip_x2 > VERY_MAX_X) {
+      d->clip_x2 = MAXX;
       d->error = 1;
       strcpy(d->error_message, "Can't read max x");
     }
   }
   if (strcmp(name, "min_y") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1) == 0) {
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y1) == 0 ||
+        d->clip_y1 < VERY_MIN_Y) {
+      d->clip_y1 = MINY;
       d->error = 1;
       strcpy(d->error_message, "Can't read min y");
     }
   }
   if (strcmp(name, "max_y") == 0) {
-    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2) == 0) {
+    if (gtk_entry_get_double(GTK_ENTRY(widget), &d->clip_y2) == 0 ||
+        d->clip_y2 > VERY_MAX_Y) {
+      d->clip_y2 = MAXY;
       d->error = 1;
       strcpy(d->error_message, "Can't read max y");
     }
@@ -675,27 +683,6 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
 }
 
 /**
- * @brief Get the number of days in the 'period' months from today
- *
- * @param period - number of months to add to current date
- * @return int number of days in 'period' moths from current date
- */
-int get_days_per_period(int period) {
-  int result = 0;
-  time_t current_time, future_time;
-  /* Obtain current time. */
-  current_time = time(NULL);
-  struct tm current_date = *localtime(&current_time);
-  struct tm future_date = current_date;
-  future_date.tm_year =
-      current_date.tm_year + floor((current_date.tm_mon + period) / 12.);
-  future_date.tm_mon = (current_date.tm_mon + period) % 12;
-  future_time = mktime(&future_date);
-  result = round(difftime(future_time, current_time) / SECOND_PER_DAY);
-  return result;
-}
-
-/**
  * @brief Get the number of days in the 'period' months from today+startday
  *
  * @param startday number of dayss to add to current date
@@ -727,6 +714,18 @@ long double bank_round(long double value) {
       if (dif > 0.5 || dif == 0.5 && (result & 1) != 0) result++;
     }
   }
+  return result;
+}
+
+/**
+ * @brief Get the number of days in the 'period' months from today
+ *
+ * @param period - number of months to add to current date
+ * @return int number of days in 'period' moths from current date
+ */
+int get_days_per_period(int period) {
+  int result = 0;
+  result = accurate_days_per_period(0, period);
   return result;
 }
 
