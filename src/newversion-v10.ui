@@ -1594,6 +1594,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">day_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited0" object="replenishments_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="markup">7</attribute>
@@ -1610,6 +1611,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">month_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited1" object="replenishments_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">1</attribute>
@@ -1625,6 +1627,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">year_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited2" object="replenishments_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">2</attribute>
@@ -1640,6 +1643,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">amount_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited3" object="replenishments_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">3</attribute>
@@ -1672,6 +1676,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">day_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited0" object="withdrawals_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="markup">7</attribute>
@@ -1688,6 +1693,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">month_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited1" object="withdrawals_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">1</attribute>
@@ -1703,6 +1709,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">year_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited2" object="withdrawals_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">2</attribute>
@@ -1718,6 +1725,7 @@ Deposit amount</property>
                           <object class="GtkCellRendererSpin">
                             <property name="editable">True</property>
                             <property name="adjustment">amount_adjustment</property>
+                            <signal name="edited" handler="on_cellrendererspin_edited3" object="withdrawals_tree_view" swapped="no"/>
                           </object>
                           <attributes>
                             <attribute name="text">3</attribute>

@@ -868,6 +868,43 @@ extern void exit_button_clicked(GtkWidget *widget, gpointer data) {
   gtk_main_quit();
 }
 
+extern void on_cellrendererspin_edited(GtkCellRendererText *renderer,
+                                       gchar *path, gchar *new_text,
+                                       gpointer data, int index) {
+  if (g_ascii_strcasecmp(new_text, "") != 0) {
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    GtkTreeView *replenishments_tree_view = (GtkTreeView *)data;
+    // (GtkTreeView *)gtk_widget_get_parent(
+    //     gtk_widget_get_parent((GtkWidget *)renderer));
+    model = gtk_tree_view_get_model(replenishments_tree_view);
+    if (gtk_tree_model_get_iter_from_string(model, &iter, path))
+      gtk_list_store_set(GTK_LIST_STORE(model), &iter, index, atoi(new_text),
+                         -1);
+  }
+}
+
+extern void on_cellrendererspin_edited0(GtkCellRendererText *renderer,
+                                        gchar *path, gchar *new_text,
+                                        gpointer data) {
+  on_cellrendererspin_edited(renderer, path, new_text, data, 0);
+}
+extern void on_cellrendererspin_edited1(GtkCellRendererText *renderer,
+                                        gchar *path, gchar *new_text,
+                                        gpointer data) {
+  on_cellrendererspin_edited(renderer, path, new_text, data, 1);
+}
+extern void on_cellrendererspin_edited2(GtkCellRendererText *renderer,
+                                        gchar *path, gchar *new_text,
+                                        gpointer data) {
+  on_cellrendererspin_edited(renderer, path, new_text, data, 2);
+}
+extern void on_cellrendererspin_edited3(GtkCellRendererText *renderer,
+                                        gchar *path, gchar *new_text,
+                                        gpointer data) {
+  on_cellrendererspin_edited(renderer, path, new_text, data, 3);
+}
+
 int main(int argc, char *argv[]) {
   GtkBuilder *builder;
   GError *error = NULL;
@@ -876,7 +913,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v8.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v10.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
