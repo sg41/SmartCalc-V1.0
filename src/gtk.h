@@ -28,6 +28,8 @@ typedef struct {
   double tax;
   double total_payment;
   double interest;
+  double replenishment;
+  double withdrawal;
   int type;
   int round;
   int int_cap;

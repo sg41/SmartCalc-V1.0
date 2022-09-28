@@ -344,6 +344,8 @@ void init_calc_data(calc_data *d) {
   d->type = 0;
   d->round = 0;
   d->int_cap = 0;
+  d->replenishment = 0;
+  d->withdrawal = 0;
 }
 
 extern void calculate(GtkWidget *widget, gpointer data) {
@@ -570,19 +572,16 @@ extern void get_deposit_calc_data(GtkWidget *widget, gpointer data) {
         widget, &d->tax_rate, 0.00, 100., 0, d,
         "Error reading tax rate\nPlease enter values in range 0.01-100\n");
   }
-  // if (strcmp(name, "replenishments_tree_view") == 0) {
-  //   const char *src_str_ptr = gtk_entry_get_text((GtkEntry *)widget);
-  //   if (sscanf(src_str_ptr, "%lf", &(d->tax_rate)) != 1 || d->tax_rate < 0.0
-  //   ||
-  //       d->tax_rate > 100) {
-  //     d->tax_rate = DEFAULT_RATE;
-  //     d->error = 1;
-  //     gtk_entry_set_double((GtkEntry *)widget, d->tax_rate);
-  //     strcpy(d->error_message,
-  //            "Error reading tax rate\nPlease enter values in range
-  //            0.01-100\n");
-  //   }
-  // }
+  if (strcmp(name, "replenishment_entry") == 0) {
+    get_entry_value(widget, &d->replenishment, 0.00, 1000000., 0, d,
+                    "Error reading replenishment amount\nPlease enter values "
+                    "in range 0.00-1000000\n");
+  }
+  if (strcmp(name, "withdrawal_entry") == 0) {
+    get_entry_value(widget, &d->withdrawal, 0.00, 1000000., 0, d,
+                    "Error reading replenishment amount\nPlease enter values "
+                    "in range 0.00-1000000\n");
+  }
 }
 
 extern void calc_button_clicked(GtkButton *button, gpointer data) {
@@ -770,15 +769,31 @@ double complex_interest_calc(calc_data *d) {
   int term = get_days_per_period(d->duration);
   int period = d->pay_period;
   int rest = term % period;
+  double current_interest;
+  d->interest = 0;
   for (int i = 0; i < term - rest; i += period) {
     if (d->pay_period >= 30)
       period = accurate_days_per_period(i, d->pay_period / 30);
 
-    res += calc_simple_daily_interest(d, res, i, period);
+    current_interest =
+        calc_simple_daily_interest(d, d->int_cap ? res : d->amount, i, period);
+    d->interest += current_interest;
+    res += current_interest;
+
+    if (i + period < term - rest || (d->pay_period == 7 && rest != 0)) {
+      res += d->replenishment;
+      if (res >= d->withdrawal) res -= d->withdrawal;
+      d->amount += d->replenishment;
+      if (d->amount >= d->withdrawal) d->amount -= d->withdrawal;
+    }
   }
 
-  if (d->pay_period == 7)
-    res += calc_simple_daily_interest(d, res, term - rest - 1, rest);
+  if (d->pay_period == 7) {
+    current_interest = calc_simple_daily_interest(
+        d, d->int_cap ? res : d->amount, term - rest - 1, rest);
+    d->interest += current_interest;
+    res += current_interest;
+  }
 
   return res;
 }
@@ -791,32 +806,9 @@ extern void deposit_calc_button_clicked(GtkButton *button, gpointer data) {
 
   init_calc_data(&d);
   gtk_container_foreach(source_grid, get_deposit_calc_data, &d);
-  if (d.int_cap == FALSE) {  // simple interest
-    char interest_expr[MAXSTR];
-    sprintf(interest_expr, "%lf*%lf*(%d/%d)/100.", d.amount, d.rate,
-            get_days_per_period(d.duration), get_days_per_period(12));
-    int good = 0;
-    if (d.duration > 12) {
-      d.interest = d.amount * d.rate / 100. * ((int)d.duration / 12);
-      d.interest +=
-          d.amount * d.rate / 100. *
-          (get_days_per_period(d.duration % 12) / get_days_per_period(12));
-    } else {
-      d.interest = bank_round(calc(interest_expr, 0, &good) * 100.) / 100.;
-    }
-    if (d.round && d.interest < 1) {
-      d.error = 2;
-      strcpy(d.error_message, "Incorrect input data - can't calculate");
-    }
-    if (d.round) d.interest = bank_round(d.interest);
-    d.tax = (d.interest) * (d.tax_rate / 100.);
-    d.total_payment = (d.interest) + d.amount - d.tax;
-  } else {  // Complex interest
-    d.total_payment = complex_interest_calc(&d);
-    d.interest = d.total_payment - d.amount;
-    d.tax = (d.interest) * (d.tax_rate / 100.);
-    d.total_payment -= d.tax;
-  }
+  d.total_payment = complex_interest_calc(&d);
+  d.tax = (d.interest) * (d.tax_rate / 100.);
+  d.total_payment -= d.tax;
   gtk_container_foreach(result_grid, set_deposit_result, &d);
   gtk_widget_queue_draw((GtkWidget *)result_grid);
   if (d.error) gtk_widget_queue_draw((GtkWidget *)source_grid);
@@ -912,7 +904,7 @@ int main(int argc, char *argv[]) {
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v8.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, "newversion-v9.ui", &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
     return 1;
