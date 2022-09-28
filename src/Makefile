@@ -1,13 +1,14 @@
 LDOPTS = -L. -lm -lcheck
-CCOPTS = -Wall -Werror -Wextra -DNDEBUG
-GTK_OPTS = -rdynamic `pkg-config --cflags gtk+-3.0`
+CCOPTS = -Wall -Werror -Wextra -DNDEBUG -g
+GTK_OPTS = -g -rdynamic `pkg-config --cflags gtk+-3.0`
 GTK_LIBS = `pkg-config --libs gtk+-3.0`
 CC = gcc
 APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
 TEST_APP = test.app
 TEST_C = tests/test.c
 
-ROOT := $(shell git rev-parse --show-toplevel)
+# ROOT := $(shell git rev-parse --show-toplevel)
+ROOT := ../
 GCOV=-fprofile-arcs -ftest-coverage
 OS=$(shell uname)
 ifeq ($(OS), Linux)
@@ -25,7 +26,7 @@ OBJECTS = rpr/llist.o rpr/stack.o rpr/expr.o rpr/core.o
 SOURCES = $(OBJECTS:.o=.c)
 HEADERS = $(OBJECTS:.o=.h)
 
-all:  graph 
+all:  graph gtk 
 
 
 
@@ -59,7 +60,7 @@ rpr/core.o: rpr/core.c rpr/core.h
 $(TEST_C): tests/*.check
 	checkmk tests/*.check > $(TEST_C)
 
-test: $(TEST_C) $(LIB)
+tests: $(TEST_C) $(LIB)
 	$(CC) $(CCOPTS) $(TEST_C) -o $(TEST_APP) $(LDOPTS) $(LIBS) -l$(LIB)
 	-CK_TIMEOUT_MULTIPLIER=10 ./$(TEST_APP)
 
@@ -103,3 +104,4 @@ gcov_report: clean $(TEST_C)
 	[ -d $(ROOT)/src/report ] || mkdir $(ROOT)/src/report
 	genhtml -o $(ROOT)/src/report gcov_report.info
 	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info $(TEST_C)
+
