@@ -669,7 +669,7 @@ int check_long_year(int days) {
  */
 int accurate_days_per_period(int startday, int period) {
   int result = 0;
-  int last_days[12] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  // int last_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   time_t start_time, future_time;
   /* Obtain current time. */
   start_time = time(NULL);
@@ -677,12 +677,12 @@ int accurate_days_per_period(int startday, int period) {
   int mday = start_date.tm_mday;
   if (mday > 28) start_time -= 3 * SECOND_PER_DAY;
   start_time += startday * SECOND_PER_DAY;
-  /*struct tm */ start_date = *localtime(&start_time);
+  start_date = *localtime(&start_time);
   struct tm future_date = start_date;
   future_date.tm_year =
       start_date.tm_year + floor((start_date.tm_mon + period) / 12.);
-  if (future_date.tm_year % 4 == 0) last_days[1] = 29;
   future_date.tm_mon = (start_date.tm_mon + period) % 12;
+  // if (future_date.tm_year % 4 == 0) last_days[1] = 29;
   // future_date.tm_mday = (mday > last_days[future_date.tm_mon])
   //                           ? last_days[future_date.tm_mon]
   //                           : mday;
@@ -696,7 +696,6 @@ long double bank_round(long double value) {
   int result = (int)value;
   if (value >= 0) {
     if (value < 2147483647.5) {
-      // result = (int)value;
       long double dif = value - result;
       if (dif > 0.5 || dif == 0.5 && (result & 1) != 0) result++;
     }
@@ -780,15 +779,9 @@ double complex_interest_calc(calc_data *d) {
   int rest = term % period;
   double current_interest;
   d->interest = 0;
-  time_t start_time;
-  /* Obtain current time. */
-  start_time = time(NULL);
-  struct tm start_date = *localtime(&start_time);
 
   for (int i = 0, n = 0; i < term - rest; i += period, n++) {
     if (d->pay_period >= 30)
-      // period = accurate_days_per_period_new(start_date.tm_mday, n,
-      //                                       d->pay_period / 30);
       period = accurate_days_per_period(i, d->pay_period / 30);
 
     current_interest =
@@ -802,9 +795,6 @@ double complex_interest_calc(calc_data *d) {
       d->amount += d->replenishment;
       if (d->amount >= d->withdrawal) d->amount -= d->withdrawal;
     }
-    printf("INT %f, sum %f, I=%d, period = %d\n", current_interest, d->interest,
-           i, period);
-    fflush(stdout);
   }
 
   if (d->pay_period == 7) {

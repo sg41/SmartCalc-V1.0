@@ -111,3 +111,6 @@ ifeq ($(OS), Linux)
 		sudo docker build . -t calc:1.01
 		sudo docker run -p 80:80 --rm calc:1.01
 endif
+
+broadway: clean gtk
+	sudo ./run.sh
