@@ -17,6 +17,7 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends \
     valgrind\
     gcovr \
     check \
+    texinfo \
     && apt-get clean && rm -rf /var/lib/apt/lists
 WORKDIR /s21_Smart_Calc_1.0/
 COPY ./  ./

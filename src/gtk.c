@@ -899,17 +899,39 @@ extern void on_cellrendererspin_edited3(GtkCellRendererText *renderer,
   on_cellrendererspin_edited(renderer, path, new_text, data, 3, 0, 1000000);
 }
 
+char *get_path(const char *str, char *buf) {
+  if (str != NULL && buf != NULL) {
+    int i;
+    for (i = strlen(str); i > 0; i--) {
+      if (str[i] == '/') break;
+    }
+    strncpy(buf, str, i + 1);
+    buf[i + 1] = 0;
+  }
+  return buf;
+}
+
 int main(int argc, char *argv[]) {
   GtkBuilder *builder;
   GError *error = NULL;
+  char path[MAXSTR];
+  get_path(argv[0], path);
+  strcat(path, "newversion-v9.ui");
 
   gtk_init(&argc, &argv);
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
-  if (gtk_builder_add_from_file(builder, "newversion-v9.ui", &error) == 0) {
+  // if (gtk_builder_add_from_file(builder, "newversion-v9.ui", &error) == 0) {
+  if (gtk_builder_add_from_file(builder, path, &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
+    get_path(argv[0], path);
+    strcat(path, "graph.app");
+    fprintf(stderr,
+            "Trying to use text version: %s\nPlease enter expression: ", path);
+    execl(path, path, NULL);
+    fprintf(stderr, "Something wrong, exiting\n");
     return 1;
   }
 

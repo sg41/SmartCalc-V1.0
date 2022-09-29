@@ -6,6 +6,7 @@ CC = gcc
 APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
 TEST_APP = test.app
 TEST_C = tests/test.c
+.SUFFIXES:
 
 # ROOT := $(shell git rev-parse --show-toplevel)
 ROOT := ../
@@ -19,25 +20,38 @@ else
 	LEAKS=CK_FORK=no leaks --atExit -- 
 endif
 
-APP = $(ROOT)/build/graph
+APP = graph.app
 LIB = s21_SmartCalc
 SRC_DIR=$(ROOT)/src
 OBJECTS = rpr/llist.o rpr/stack.o rpr/expr.o rpr/core.o
 SOURCES = $(OBJECTS:.o=.c)
 HEADERS = $(OBJECTS:.o=.h)
+INST_DIR=../build
 
 all:  graph gtk 
 
+install: $(INST_DIR)/gtk.app
 
+$(INST_DIR)/gtk.app: gtk $(APP)
+	[ -d $(INST_DIR) ] || mkdir $(INST_DIR)
+	cp gtk.app newversion-v9.ui $(APP) $(INST_DIR)
 
-$(LIB): $(OBJECTS)
+uninstall: 
+	rm -rf $(INST_DIR)/gtk.app $(INST_DIR)/newversion-v9.ui $(INST_DIR)/$(APP)
+	-[ `ls -a $(INST_DIR)| wc -l` -eq 2 ] && rm -rf $(INST_DIR)
+
+$(LIB): lib$(LIB).a
+
+lib$(LIB).a: $(OBJECTS)
 	ar rcs lib$(LIB).a $(OBJECTS)
 
-gtk: gtk.c	$(LIB)
+gtk: gtk.app
+
+gtk.app: gtk.c	$(LIB)
 	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) -l$(LIB) $(LIBS) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
-	[ -d ../build ] || mkdir ../build
+	[ -d $(INST_DIR) ] || mkdir $(INST_DIR)
 	gcc $(CCOPTS) -DTXT_VERSION graph.c -o $(APP) -l$(LIB) $(LDOPTS)
 
 $(APP): graph
@@ -87,11 +101,11 @@ clean:
 rebuild: clean all
 
 leaks: $(APP)
-	$(LEAKS) $(APP) $(APP_ARGS)
+	$(LEAKS) ./$(APP) $(APP_ARGS)
 
 leaks_test: test_leaks
 
-test_leaks: test
+test_leaks: tests
 	$(LEAKS) ./$(TEST_APP) $(APP_ARGS)
 
 gcov_report: clean $(TEST_C)
@@ -105,7 +119,13 @@ gcov_report: clean $(TEST_C)
 	genhtml -o $(ROOT)/src/report gcov_report.info
 	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info $(TEST_C)
 
-docker_gtk: clean
+docker_build: clean
+ifeq ($(OS), Linux)
+		rm -rf report
+		sudo docker build . -t calc:1.01
+endif
+
+docker_run: clean
 ifeq ($(OS), Linux)
 		rm -rf report
 		sudo docker build . -t calc:1.01

@@ -1,0 +1,50 @@
+@setfilename doc.texi
+@documentencoding UTF-8
+
+@settitle s21_SmartCalc
+
+@copying
+Copyright © 2022 Joellebo
+@end copying
+
+
+@titlepage
+@title s21_SmartCalc
+@subtitle «A new word in calculator development»
+@author Joellebo
+
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@headings off
+
+@contents
+
+@ifnottex
+@node Top
+@top s21_SmartCalc
+@insertcopying
+@end ifnottex
+
+@menu
+* Introduction::                
+* Second Chapter::              
+@end menu
+
+@node Introduction
+@chapter How it all began
+
+@cindex intro
+This is an introductionary chapter.
+
+@node Second Chapter
+@chapter Second Chapter
+
+This is Texinfo sample document.
+
+@node Concept Index
+@unnumbered Concept Index
+@printindex cp
+
+@bye
