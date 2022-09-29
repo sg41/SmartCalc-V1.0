@@ -514,7 +514,6 @@ void get_combo_value(GtkComboBox *widget, int *value, int def, calc_data *d,
 extern void get_credit_calc_data(GtkWidget *widget, gpointer data) {
   const gchar *name = gtk_widget_get_name(widget);
   calc_data *d = data;
-  // const gchar *active_id;
 
   if (strcmp(name, "amount_entry") == 0) {
     get_entry_value(widget, &d->amount, 0.01, 10000000000., DEFAULT_AMOUNT, d,
@@ -669,7 +668,6 @@ int check_long_year(int days) {
  */
 int accurate_days_per_period(int startday, int period) {
   int result = 0;
-  // int last_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   time_t start_time, future_time;
   /* Obtain current time. */
   start_time = time(NULL);
@@ -682,10 +680,6 @@ int accurate_days_per_period(int startday, int period) {
   future_date.tm_year =
       start_date.tm_year + floor((start_date.tm_mon + period) / 12.);
   future_date.tm_mon = (start_date.tm_mon + period) % 12;
-  // if (future_date.tm_year % 4 == 0) last_days[1] = 29;
-  // future_date.tm_mday = (mday > last_days[future_date.tm_mon])
-  //                           ? last_days[future_date.tm_mon]
-  //                           : mday;
 
   future_time = mktime(&future_date);
   result = round(difftime(future_time, start_time) / SECOND_PER_DAY);
