@@ -641,6 +641,26 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
 }
 
 /**
+ * @brief check is any long year in period days from today
+ *
+ * @param days period length in days
+ * @return int 0 if no long years >0 if it is
+ */
+int check_long_year(int days) {
+  int result = 0;
+  time_t current_time, future_time;
+  /* Obtain current time. */
+  current_time = time(NULL);
+  future_time = current_time + days * SECOND_PER_DAY;
+  struct tm current_date = *localtime(&current_time);
+  struct tm future_date = *localtime(&future_time);
+  for (int i = current_date.tm_year; i <= future_date.tm_year; i++) {
+    if (i % 4 == 0) result++;
+  }
+  return result;
+}
+
+/**
  * @brief Get the number of days in the 'period' months from today+startday
  *
  * @param startday number of dayss to add to current date
@@ -649,15 +669,24 @@ extern void credit_calc_button_clicked(GtkButton *button, gpointer data) {
  */
 int accurate_days_per_period(int startday, int period) {
   int result = 0;
+  int last_days[12] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   time_t start_time, future_time;
   /* Obtain current time. */
   start_time = time(NULL);
-  start_time += startday * SECOND_PER_DAY;
   struct tm start_date = *localtime(&start_time);
+  int mday = start_date.tm_mday;
+  if (mday > 28) start_time -= 3 * SECOND_PER_DAY;
+  start_time += startday * SECOND_PER_DAY;
+  /*struct tm */ start_date = *localtime(&start_time);
   struct tm future_date = start_date;
   future_date.tm_year =
       start_date.tm_year + floor((start_date.tm_mon + period) / 12.);
+  if (future_date.tm_year % 4 == 0) last_days[1] = 29;
   future_date.tm_mon = (start_date.tm_mon + period) % 12;
+  // future_date.tm_mday = (mday > last_days[future_date.tm_mon])
+  //                           ? last_days[future_date.tm_mon]
+  //                           : mday;
+
   future_time = mktime(&future_date);
   result = round(difftime(future_time, start_time) / SECOND_PER_DAY);
   return result;
@@ -684,26 +713,6 @@ long double bank_round(long double value) {
 int get_days_per_period(int period) {
   int result = 0;
   result = accurate_days_per_period(0, period);
-  return result;
-}
-
-/**
- * @brief check is any long year in period days from today
- *
- * @param days period length in days
- * @return int 0 if no long years >0 if it is
- */
-int check_long_year(int days) {
-  int result = 0;
-  time_t current_time, future_time;
-  /* Obtain current time. */
-  current_time = time(NULL);
-  future_time = current_time + days * SECOND_PER_DAY;
-  struct tm current_date = *localtime(&current_time);
-  struct tm future_date = *localtime(&future_time);
-  for (int i = current_date.tm_year; i <= future_date.tm_year; i++) {
-    if (i % 4 == 0) result++;
-  }
   return result;
 }
 
@@ -771,8 +780,15 @@ double complex_interest_calc(calc_data *d) {
   int rest = term % period;
   double current_interest;
   d->interest = 0;
-  for (int i = 0; i < term - rest; i += period) {
+  time_t start_time;
+  /* Obtain current time. */
+  start_time = time(NULL);
+  struct tm start_date = *localtime(&start_time);
+
+  for (int i = 0, n = 0; i < term - rest; i += period, n++) {
     if (d->pay_period >= 30)
+      // period = accurate_days_per_period_new(start_date.tm_mday, n,
+      //                                       d->pay_period / 30);
       period = accurate_days_per_period(i, d->pay_period / 30);
 
     current_interest =
@@ -786,6 +802,9 @@ double complex_interest_calc(calc_data *d) {
       d->amount += d->replenishment;
       if (d->amount >= d->withdrawal) d->amount -= d->withdrawal;
     }
+    printf("INT %f, sum %f, I=%d, period = %d\n", current_interest, d->interest,
+           i, period);
+    fflush(stdout);
   }
 
   if (d->pay_period == 7) {

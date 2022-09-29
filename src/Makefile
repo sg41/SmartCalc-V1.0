@@ -105,3 +105,9 @@ gcov_report: clean $(TEST_C)
 	genhtml -o $(ROOT)/src/report gcov_report.info
 	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info $(TEST_C)
 
+docker_gtk: clean
+ifeq ($(OS), Linux)
+		rm -rf report
+		sudo docker build . -t calc:1.01
+		sudo docker run -p 80:80 --rm calc:1.01
+endif
