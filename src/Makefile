@@ -6,6 +6,7 @@ CC = gcc
 APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
 TEST_APP = test.app
 TEST_C = tests/test.c
+DOCKER_NAME=calc:1.01
 .SUFFIXES:
 
 # ROOT := $(shell git rev-parse --show-toplevel)
@@ -35,9 +36,10 @@ install: $(INST_DIR)/gtk.app
 $(INST_DIR)/gtk.app: gtk $(APP)
 	[ -d $(INST_DIR) ] || mkdir $(INST_DIR)
 	cp gtk.app newversion-v9.ui $(APP) $(INST_DIR)
+	cp run.sh $(INST_DIR)
 
 uninstall: 
-	rm -rf $(INST_DIR)/gtk.app $(INST_DIR)/newversion-v9.ui $(INST_DIR)/$(APP)
+	rm -rf $(INST_DIR)/gtk.app $(INST_DIR)/newversion-v9.ui $(INST_DIR)/$(APP) $(INST_DIR)/run.sh
 	-[ `ls -a $(INST_DIR)| wc -l` -eq 2 ] && rm -rf $(INST_DIR)
 
 $(LIB): lib$(LIB).a
@@ -51,7 +53,6 @@ gtk.app: gtk.c	$(LIB)
 	$(CC) $(GTK_OPTS) gtk.c -o gtk.app $(LDOPTS) -l$(LIB) $(LIBS) $(GTK_LIBS)
 
 graph: $(LIB) graph.c graph.h rpr/llist.h rpr/stack.h
-	[ -d $(INST_DIR) ] || mkdir $(INST_DIR)
 	gcc $(CCOPTS) -DTXT_VERSION graph.c -o $(APP) -l$(LIB) $(LDOPTS)
 
 $(APP): graph
@@ -122,14 +123,21 @@ gcov_report: clean $(TEST_C)
 docker_build: clean
 ifeq ($(OS), Linux)
 		rm -rf report
-		sudo docker build . -t calc:1.01
+		sudo docker build . -t $(DOCKER_NAME)
 endif
 
 docker_run: clean
 ifeq ($(OS), Linux)
 		rm -rf report
-		sudo docker build . -t calc:1.01
-		sudo docker run -p 80:80 --rm calc:1.01
+		sudo docker build . -t $(DOCKER_NAME)
+		sudo docker run -p 80:80 --rm $(DOCKER_NAME)
+endif
+
+docker_bash: clean
+ifeq ($(OS), Linux)
+		rm -rf report
+		sudo docker build . -t $(DOCKER_NAME)
+		sudo docker run --rm -it -p 80:80 --entrypoint bash $(DOCKER_NAME)
 endif
 
 broadway: gtk

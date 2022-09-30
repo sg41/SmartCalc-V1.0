@@ -12,17 +12,16 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends \
     libgtk-3-0 \
     libgtk-3-bin \
     libgtk-3-dev \
-    procps \
     pkg-config \
     valgrind\
     gcovr \
     check \
     texinfo \
     && apt-get clean && rm -rf /var/lib/apt/lists
-WORKDIR /s21_Smart_Calc_1.0/
+WORKDIR /s21_Smart_Calc_1.0/src
 COPY ./  ./
 
-RUN make gtk
+RUN make install
 
 # COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 # RUN  chmod u-s \

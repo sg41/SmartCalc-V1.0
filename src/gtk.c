@@ -911,49 +911,73 @@ char *get_path(const char *str, char *buf) {
   return buf;
 }
 
+void run_tex_version(char *argv) {
+  char path[MAXSTR];
+
+  get_path(argv, path);
+  strcat(path, "graph.app");
+  fprintf(stderr,
+          "Trying to use text version: %s\nPlease enter expression: ", path);
+  execl(path, path, NULL);
+  fprintf(stderr, "Something wrong, exiting\n");
+}
+
 int main(int argc, char *argv[]) {
   GtkBuilder *builder;
   GError *error = NULL;
   char path[MAXSTR];
   get_path(argv[0], path);
   strcat(path, "newversion-v9.ui");
+  int e = 0;
 
-  gtk_init(&argc, &argv);
+  if (gtk_init_check(&argc, &argv) == FALSE) {
+    run_tex_version(argv[0]);
+    // get_path(argv[0], path);
+    // strcat(path, "graph.app");
+    // fprintf(stderr,
+    //         "Trying to use text version: %s\nPlease enter expression: ",
+    //         path);
+    // execl(path, path, NULL);
+    // fprintf(stderr, "Something wrong, exiting\n");
+    e = 1;
+  }
 
   /* Construct a GtkBuilder instance and load our UI description */
   builder = gtk_builder_new();
   // if (gtk_builder_add_from_file(builder, "newversion-v9.ui", &error) == 0) {
-  if (gtk_builder_add_from_file(builder, path, &error) == 0) {
+  if (!e && gtk_builder_add_from_file(builder, path, &error) == 0) {
     g_printerr("Error loading file: %s\n", error->message);
     g_clear_error(&error);
-    get_path(argv[0], path);
-    strcat(path, "graph.app");
-    fprintf(stderr,
-            "Trying to use text version: %s\nPlease enter expression: ", path);
-    execl(path, path, NULL);
+    run_tex_version(argv[0]);
+    // get_path(argv[0], path);
+    // strcat(path, "graph.app");
+    // fprintf(stderr,
+    //         "Trying to use text version: %s\nPlease enter expression: ",
+    //         path);
+    // execl(path, path, NULL);
     fprintf(stderr, "Something wrong, exiting\n");
-    return 1;
+    e = 1;
   }
+  if (!e) {
+    //Теперь получаем виджет из Builder
+    // В данном случае ищем виджет окна
+    GtkWidget *window =
+        GTK_WIDGET(gtk_builder_get_object(builder, "calc_window"));
 
-  //Теперь получаем виджет из Builder
-  // В данном случае ищем виджет окна
-  GtkWidget *window =
-      GTK_WIDGET(gtk_builder_get_object(builder, "calc_window"));
+    //Подключаем сигналы)
+    gtk_builder_connect_signals(builder, NULL);
 
-  //Подключаем сигналы)
-  gtk_builder_connect_signals(builder, NULL);
+    // Разрешаем отображение
+    gtk_widget_show_all(window);
 
-  // Разрешаем отображение
-  gtk_widget_show_all(window);
+    // освобождение памяти
+    g_object_unref(G_OBJECT(builder));
 
-  // освобождение памяти
-  g_object_unref(G_OBJECT(builder));
+    //Пошла программа
+    gtk_main();
 
-  //Пошла программа
-  gtk_main();
-
-  // освобождение памяти
-  gtk_widget_destroy(window);
-
-  return 0;
+    // освобождение памяти
+    gtk_widget_destroy(window);
+  }
+  return e;
 }
