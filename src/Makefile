@@ -7,6 +7,8 @@ APP_ARGS = "sin(cos(x^2)^(1*-100))*x"
 TEST_APP = test.app
 TEST_C = tests/test.c
 DOCKER_NAME=calc:1.01
+RELEASE_NAME=s21_SmartCalc-1.01
+TEXI2DVI=texi2dvi
 .SUFFIXES:
 
 # ROOT := $(shell git rev-parse --show-toplevel)
@@ -31,6 +33,20 @@ INST_DIR=../build
 
 all:  graph gtk 
 
+dvi: doc.dvi
+
+doc.dvi: doc.texi
+	$(TEXI2DVI) $(SRC_DIR)/doc.texi
+
+dist: clean $(SOURCES) graph.c graph.h gtk.c gtk.h
+	[ -d $(RELEASE_NAME) ] || mkdir $(RELEASE_NAME)
+	cp *.c *.h Makefile Dockerfile newversion-v9.ui run.sh ../LICENSE ../README.md $(RELEASE_NAME)/
+	mkdir $(RELEASE_NAME)/rpr
+	cp rpr/*.c $(RELEASE_NAME)/rpr/
+	cp rpr/*.h $(RELEASE_NAME)/rpr/
+	tar -czf $(RELEASE_NAME).tar.gz $(RELEASE_NAME)
+	rm -rf $(RELEASE_NAME)
+	
 install: $(INST_DIR)/gtk.app
 
 $(INST_DIR)/gtk.app: gtk $(APP)
@@ -96,8 +112,8 @@ check2: $(SOURCES) graph.c $(HEADERS) graph.h
 .PHONY: all clean rebuild
 
 clean:
-	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(OBJECTS:.o=.h.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C)
-	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format *.app
+	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(OBJECTS:.o=.h.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C) $(RELEASE_NAME).tar.gz $(RELEASE_NAME)
+	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format *.app *.log
 
 rebuild: clean all
 

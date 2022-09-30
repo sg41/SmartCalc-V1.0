@@ -17,6 +17,7 @@ RUN apt-get -y update && apt-get -y install --no-install-recommends \
     gcovr \
     check \
     texinfo \
+    texlive-binaries \
     && apt-get clean && rm -rf /var/lib/apt/lists
 WORKDIR /s21_Smart_Calc_1.0/src
 COPY ./  ./
