@@ -113,7 +113,7 @@ check2: $(SOURCES) graph.c $(HEADERS) graph.h
 
 clean:
 	rm -rf $(OBJECTS) $(OBJECTS:.o=.c.bak) $(OBJECTS:.o=.h.bak) $(APP) lib$(LIB).a $(TEST_APP) $(TEST_C) $(RELEASE_NAME).tar.gz $(RELEASE_NAME)
-	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format *.app *.log
+	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info CPPLINT.cfg .clang-format *.app *.log *.aux *.dvi *.toc
 
 rebuild: clean all
 

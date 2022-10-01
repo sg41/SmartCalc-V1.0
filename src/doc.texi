@@ -1,50 +1,81 @@
-@setfilename doc.texi
-@documentencoding UTF-8
+    \input texinfo
 
-@settitle s21_SmartCalc
+    @setfilename example.info
 
-@copying
-Copyright © 2022 Joellebo
-@end copying
+    @settitle Texinfo Example
 
+   
 
-@titlepage
-@title s21_SmartCalc
-@subtitle «A new word in calculator development»
-@author Joellebo
+    @ifinfo
 
-@vskip 0pt plus 1filll
-@insertcopying
-@end titlepage
+    @node Top
 
-@headings off
+    @top test
 
-@contents
+    Document exaple Texinfo.
 
-@ifnottex
-@node Top
-@top s21_SmartCalc
-@insertcopying
-@end ifnottex
+    @end ifinfo
 
-@menu
-* Introduction::                
-* Second Chapter::              
-@end menu
+   
 
-@node Introduction
-@chapter How it all began
+    @menu
 
-@cindex intro
-This is an introductionary chapter.
+    * Introduction:: Definitions, Меры, Сложность
 
-@node Second Chapter
-@chapter Second Chapter
+    * Calculations::  Simple operations
 
-This is Texinfo sample document.
+    @end menu
 
-@node Concept Index
-@unnumbered Concept Index
-@printindex cp
+   
 
-@bye
+    @node Introduction
+
+    @chapter Introduction
+
+This is sample text
+
+   
+
+    @menu
+
+    * Definitions:: Basics
+
+    * Effectiveness:: How to measure Effectiveness
+
+    * Complexity restrictions:: Typical Complexity restrictions
+
+    @end menu
+
+   
+
+    @node Definitions
+
+    @section Definitions
+
+    ...
+
+   
+
+    @node Effectiveness
+
+    @section Effectiveness
+
+    ...
+
+   
+
+    @node Complexity restrictions
+
+    @section Complexity restrictions
+
+    ...
+
+   
+
+    @node Calculations
+
+    @chapter Calculations
+
+    ...
+
+    @bye
