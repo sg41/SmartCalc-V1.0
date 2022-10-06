@@ -137,24 +137,18 @@ gcov_report: clean $(TEST_C)
 	rm -rf *.o $(TEST_APP) lib$(LIB).a $(OBJECTS) *.a *.gcno *.gcda *.gcov *.info $(TEST_C)
 
 docker_build: clean
-ifeq ($(OS), Linux)
 		rm -rf report
 		sudo docker build . -t $(DOCKER_NAME)
-endif
 
 docker_run: clean
-ifeq ($(OS), Linux)
 		rm -rf report
 		sudo docker build . -t $(DOCKER_NAME)
 		sudo docker run -p 80:80 --rm $(DOCKER_NAME)
-endif
 
 docker_bash: clean
-ifeq ($(OS), Linux)
 		rm -rf report
 		sudo docker build . -t $(DOCKER_NAME)
 		sudo docker run --rm -it -p 80:80 --entrypoint bash $(DOCKER_NAME)
-endif
 
 broadway: gtk
 	sudo ./run.sh
