@@ -138,17 +138,31 @@ gcov_report: clean $(TEST_C)
 
 docker_build: clean
 		rm -rf report
+ifeq ($(OS), Linux)
 		sudo docker build . -t $(DOCKER_NAME)
+else
+		docker build . -t $(DOCKER_NAME)
+endif
 
 docker_run: clean
 		rm -rf report
+ifeq ($(OS), Linux)
 		sudo docker build . -t $(DOCKER_NAME)
 		sudo docker run -p 80:80 --rm $(DOCKER_NAME)
+else
+		docker build . -t $(DOCKER_NAME)
+		docker run -p 80:80 --rm $(DOCKER_NAME)
+endif
 
 docker_bash: clean
 		rm -rf report
+ifeq ($(OS), Linux)
 		sudo docker build . -t $(DOCKER_NAME)
 		sudo docker run --rm -it -p 80:80 --entrypoint bash $(DOCKER_NAME)
+else
+		docker build . -t $(DOCKER_NAME)
+		docker run --rm -it -p 80:80 --entrypoint bash $(DOCKER_NAME)
+endif
 
 broadway: gtk
 	sudo ./run.sh
