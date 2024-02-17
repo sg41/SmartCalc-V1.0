@@ -47,5 +47,11 @@ SmartCalc v1.0 is a C program developed using the C11 standard with the gcc comp
 - Presents a deposit profitability calculator mode.
 - Specifies inputs (deposit amount, term, interest rate, tax rate, periodicity of payments, etc.) and outputs (accrued interest, tax amount, final deposit amount).
 
-## Feedback
-Upon completion of the project, participants are encouraged to provide feedback via the [feedback form](https://forms.gle/MAxcabZjBPmTmhPv5) to enhance the educational experience provided by the Pedago Team.
+## How to Make
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/sg41/SmartCalc-V1.0.git SmartCalc
+cd SmartCalc
+make install
+```
